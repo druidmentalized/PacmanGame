@@ -22,7 +22,7 @@ public class KeyHandler implements KeyListener
 
     @Override
     public void keyTyped(KeyEvent e) {
-        //nothing for now
+        //nothing
     }
 
     @Override
@@ -46,7 +46,7 @@ public class KeyHandler implements KeyListener
 
     @Override
     public void keyReleased(KeyEvent e) {
-        //nothing for now
+        //nothing
     }
 
     //GETTERS & SETTERS

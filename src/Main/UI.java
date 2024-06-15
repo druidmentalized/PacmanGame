@@ -42,18 +42,20 @@ public class UI implements Resizable, Redrawable {
                 2 * gp.getHeightTileSize());
         gp.getUiPanel().add(scoreLabel);
 
+        //preparing timerLabel
         timerLabel = createLabel(String.valueOf(gameTimeCounter));
         timerLabel.setBounds(gp.getMaxScreenWidth() / 2, gp.getWidthTileSize(), 5 * gp.getHeightTileSize(),
                 2 * gp.getHeightTileSize());
         gp.getUiPanel().add(timerLabel);
 
+        //prepare pauseLabel
         pauseLabel = createLabel("PAUSE");
         pauseLabel.setFont(pauseLabel.getFont().deriveFont(50F));
         pauseLabel.setBounds(gp.getMaxScreenWidth() / 2 - 4 * gp.getWidthTileSize(), gp.getMaxScreenHeight() / 2 - 5 * gp.getHeightTileSize(),
                 20 * gp.getWidthTileSize(), 5 * gp.getHeightTileSize());
         gp.getUiPanel().add(pauseLabel);
 
-
+        //adding Health
         for (int i = 0; i < gp.getPlayer().getLives(); i++) {
             addHealth();
         }
@@ -76,6 +78,7 @@ public class UI implements Resizable, Redrawable {
         scoreLabel.setText(String.valueOf(gp.getScore()));
         timerLabel.setText(String.valueOf(gameTimeCounter));
 
+        //making visible only when game is paused
         pauseLabel.setVisible(gp.getGameState() == GameState.PAUSE);
 
         //drawing score for killing ghost(if exists)
@@ -85,10 +88,14 @@ public class UI implements Resizable, Redrawable {
     private void drawGhostKillPoints() {
         if (!messagesFlow.isEmpty()) {
             for (int i = 0; i < messagesFlow.size(); i += 1) {
+                //setting font for message
                 messagesFlow.get(i).setFont(emulogic);
                 messagesFlow.get(i).setFont(messagesFlow.get(i).getFont().deriveFont(11f));
                 messagesFlow.get(i).setForeground(new Color(0, 255, 255));
+
+                //deducting counter
                 messagesCounter.set(i, messagesCounter.get(i) - 1);
+
                 if (messagesCounter.get(i) == 0) //means that time to show the message ended
                 {
                     gp.getUiPanel().remove(messagesFlow.get(i));
@@ -104,11 +111,13 @@ public class UI implements Resizable, Redrawable {
         JLabel healthLabel = new JLabel(new ImageIcon(healthImage.getScaledInstance((int)(gp.getWidthTileSize() * 1.5),
                 (int)(gp.getHeightTileSize() * 1.5), Image.SCALE_SMOOTH)));
 
+        //painting relying on the position of the previous image
         if (!healthLabels.isEmpty()) {
             healthLabel.setBounds(healthLabels.getLast().getBounds().x + (2 * gp.getWidthTileSize()),
                     (int)(gp.getMaxScreenHeight() - (1.75 * gp.getHeightTileSize())),
                     healthLabel.getIcon().getIconWidth(), healthLabel.getIcon().getIconHeight());
         }
+        //if no hearts were made before, then painting from a base position
         else {
             healthLabel.setBounds(gp.getWidthTileSize(), (int)(gp.getMaxScreenHeight() - (1.75 * gp.getHeightTileSize())),
                     healthLabel.getIcon().getIconWidth(), healthLabel.getIcon().getIconHeight());

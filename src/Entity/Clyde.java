@@ -33,6 +33,7 @@ public class Clyde extends Ghost {
 
     @Override
     protected Point findInChaseMode() {
+        //going to players position. When in range of 8 tiles, going to scatter tile position
         int scareDistance = gp.getWidthTileSize() * 8;
         if (calculateVectorDistance(x, y, gp.getPlayer().x, gp.getPlayer().y) <= scareDistance) {
             return scatterCoords;

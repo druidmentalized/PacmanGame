@@ -14,9 +14,11 @@ public class Resizer implements ComponentListener {
 
     @Override
     public void componentResized(ComponentEvent e) {
+        //taking game window
         GamePanel gp = (GamePanel) e.getComponent();
+        //pausing the whole game, while resizing
         gp.setGameState(GameState.PAUSE);
-        gp.getGameThread().interrupt();
+        gp.getGameThread().interrupt(); //to make it instant
 
         double newWidth = gp.getWidth();
         double newHeight = gp.getHeight();

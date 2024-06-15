@@ -121,6 +121,7 @@ public class GhostBehaviour implements Runnable {
                 }
             }
 
+            //stopping thread if game ended
             if (gp.getGameThread() == null) {
                 threadRunning = false;
             }
@@ -135,6 +136,7 @@ public class GhostBehaviour implements Runnable {
     }
 
     private void tryDropBooster(Ghost ghost) {
+        //random booster with 25% chance of dropping
         Random random = new Random();
         if (random.nextInt(100) <= 25) {
             switch (gp.getBoostersCollection().get(random.nextInt(gp.getBoostersCollection().size()))) {
@@ -147,14 +149,6 @@ public class GhostBehaviour implements Runnable {
         }
     }
 
-    public int getFrightenedTiming() {
-        return frightenedTiming;
-    }
-
-    public int getFrozenTiming() {
-        return frozenTiming;
-    }
-
     //GETTERS & SETTERS
 
     //getters
@@ -163,6 +157,12 @@ public class GhostBehaviour implements Runnable {
     }
     public int getFrightenedCounter() {
         return frightenedCounter;
+    }
+    public int getFrightenedTiming() {
+        return frightenedTiming;
+    }
+    public int getFrozenTiming() {
+        return frozenTiming;
     }
     //----------------------------------------
 

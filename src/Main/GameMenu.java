@@ -123,6 +123,7 @@ public class GameMenu {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
+        //saving highscore when leaving the application
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -146,7 +147,6 @@ public class GameMenu {
         titlePanel.setOpaque(false);
         titlePanel.setBounds(100, 50, 500, 100);
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.X_AXIS));
-
 
         //first part of title
         JLabel titlePart1 = new JLabel("Pa");
@@ -195,6 +195,7 @@ public class GameMenu {
         int indent = 40;
         int positionY = 200 + height + indent;
 
+        //setting buttons' positions
         playButton.setBounds(positionX, positionY, width, height);
         positionY += height + indent;
         highscoresButton.setBounds(positionX, positionY, width, height);
@@ -236,6 +237,7 @@ public class GameMenu {
     }
 
     private JPanel createPlayPanel() {
+        //panel for choosing game mode
         JPanel playPanel = new JPanel(null);
         playPanel.setOpaque(false);
 
@@ -313,6 +315,7 @@ public class GameMenu {
     }
 
     private JPanel createHighscoresPanel() {
+        //panel to show highscores of the player
         JPanel highscoresPanel = new JPanel(null);
         highscoresPanel.setOpaque(false);
 
@@ -458,8 +461,6 @@ public class GameMenu {
         positionY += height + nameIndent;
         sounderLabel.setBounds(positionX, positionY, width, height);
 
-
-
         //adding labels
         creditsPanel.add(titleLabel);
         creditsPanel.add(programmingLabel);
@@ -526,12 +527,14 @@ public class GameMenu {
         promptLabel.setBounds(positionX, positionY, width, height);
         highscoreNameChooserPanel.add(promptLabel);
 
+        //adding field to enter name
         JTextField nameField = new JTextField();
         nameField.setFont(emulogicFont);
         nameField.setFont(nameField.getFont().deriveFont(21f));
+        nameField.setForeground(new Color(255, 255, 255));
         nameField.setBackground(new Color(20, 20,20));
-        nameField.setForeground(Color.WHITE);
         nameField.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
+
         positionY += 100;
         nameField.setBounds(positionX, positionY, width, height);
         highscoreNameChooserPanel.add(nameField);

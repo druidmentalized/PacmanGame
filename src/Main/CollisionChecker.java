@@ -16,11 +16,13 @@ public class CollisionChecker {
     }
 
     public void checkIfCanMove(Entity entity, Direction direction) {
+        //taking the opposite collision border to the direction of moving
         double entityCollisionX = entity.getDirection() == Direction.RIGHT ? entity.getX() + entity.getCollisionAreaRectangle().x :
                 (entity.getX() + entity.getCollisionAreaRectangle().x + entity.getCollisionAreaRectangle().width - entity.getHspeed());
         double entityCollisionY = entity.getDirection() == Direction.DOWN ? entity.getY() + entity.getCollisionAreaRectangle().y :
                 (entity.getY() + entity.getCollisionAreaRectangle().y + entity.getCollisionAreaRectangle().height - entity.getVspeed());
 
+        //counting row and column
         int entityColumn = (int)(entityCollisionX / gp.getWidthTileSize());
         int entityRow = (int)(entityCollisionY / gp.getHeightTileSize());
 
@@ -37,7 +39,7 @@ public class CollisionChecker {
             }
         }
 
-
+        //in order to point at the next(by checked direction) tile
         switch (direction) {
             case UP ->
                 entityRow--;
@@ -49,7 +51,7 @@ public class CollisionChecker {
                 entityColumn--;
         }
 
-        //for ethereal player to not go out of borders
+        //for ethereal player to not go out of borders or inside the ghosts house
         if ((entity instanceof Player) && ((Player)entity).isEthereal()) {
             if (neverPassableTileNums.contains(gp.getTileManager().getTiles()[entityRow][entityColumn].getTileType())) {
                 entity.collision = true;
@@ -57,6 +59,7 @@ public class CollisionChecker {
             return;
         }
 
+        //checking tile for collision
         if (gp.getTileManager().getTiles()[entityRow][entityColumn].isCollision()) {
             //for ghosts to be able to go through the gate
             entity.collision = !((entity instanceof Ghost) && gp.getTileManager().getTiles()[entityRow][entityColumn].getTileType() == 41 &&

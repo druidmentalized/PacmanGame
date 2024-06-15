@@ -48,8 +48,6 @@ public abstract class Booster extends Entity {
                 if (spriteNum == 1) currentImage = idle1;
                 else if (spriteNum == 2) currentImage = idle2;
 
-
-
                 //delay
                 try {
                     Thread.sleep(delay);
@@ -75,6 +73,7 @@ public abstract class Booster extends Entity {
                 //checking collision for current direction:
                 gp.getCollisionChecker().checkIfCanMove(this, direction);
 
+                //if touching a wall -> changing direction
                 if (collision) {
                     collision = false;
                     //taking all possible directions

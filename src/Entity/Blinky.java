@@ -32,6 +32,7 @@ public class Blinky extends Ghost {
 
     @Override
     protected Point findInChaseMode() {
+        //taking exactly players position
         return new Point(gp.getPlayer().x, gp.getPlayer().y);
     }
 }

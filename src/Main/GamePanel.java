@@ -40,7 +40,6 @@ public class GamePanel extends JPanel implements Runnable, Resizable
             "Ghost freezer"));
     private double[][] mapConstrains;
 
-
     //GAME SETTINGS
     private int score = 0;
     private int level = 1;
@@ -63,7 +62,6 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     private final JPanel uiPanel;
     private final JPanel charactersPanel;
 
-
     //DEATH PROCESSING
     public static final byte deathStated = 0;
     public static final byte deathAnimGoes = 1;
@@ -71,6 +69,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     private byte deathAnimState = deathStated;
 
     public GamePanel(JFrame window, String mapName) {
+        //basic dimensions
         setLayout(null);
         widthTileSize = 24; // basic size
         heightTileSize = 24; // basic size
@@ -78,6 +77,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         heightScale = (double) heightTileSize / originalTileSize;
         this.window = window;
 
+        //pane to store all other JPanels
         layeredPane = new JLayeredPane();
         layeredPane.setLayout(null);
 
@@ -102,32 +102,28 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         eatablesPanel.setBounds(mapPanel.getBounds());
         charactersPanel.setBounds(mapPanel.getBounds());
         layeredPane.setBounds(mapPanel.getBounds());
+
+        //adding panels according to their overlapping order
         layeredPane.add(mapPanel, Integer.valueOf(1));
         layeredPane.add(eatablesPanel, Integer.valueOf(2));
         layeredPane.add(charactersPanel, Integer.valueOf(3));
         layeredPane.add(uiPanel, Integer.valueOf(4));
 
+        //adding to main JPanel
         this.add(layeredPane);
 
-        //window.setPreferredSize(mapPanel.getPreferredSize());
-
+        //extra
         maxScreenWidth = maxScreenColumn * widthTileSize;
         maxScreenHeight = maxScreenRow * heightTileSize;
         this.setPreferredSize(new Dimension(maxScreenWidth, maxScreenHeight));
-        this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
         this.addKeyListener(keyHandler);
         this.setFocusable(true);
 
-
-
-        //this.boostersCollection = boostersCollection;
-
-
-
         //adding player
         player = new Player(this);
 
+        //adding HUD on the screen
         ui.prepareUI();
     }
 
@@ -149,9 +145,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         //making sure that animation threads are available for entities
         Entity.setAnimationRunning(true);
 
-
-
-        //filling field with pellets and dots if it is changing of the level
+        //filling field with pellets and dots(if it is changing of the level)
         if (gameState == GameState.LEVELCHANGE) {
             //filling field with pellets and dots if it is changing of the level
             for (int row = 0; row < maxScreenRow; row++) {
@@ -175,6 +169,8 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     }
 
 
+    //Main thread of the game. Carries two main parts of the game on itself:
+    //updating & relocating object all around the map
     @Override
     public void run() {
         while(gameThread != null) {
@@ -194,9 +190,10 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     public void update() {
         if (keyHandler.isPausePressed()) gameState = GameState.PAUSE;
         if (gameState == GameState.PLAY) {
-            //updating
+            //updating player
             player.update();
 
+            //updating ghosts
             for (Ghost ghost : ghosts) {
                 ghost.update();
             }
@@ -211,6 +208,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
                 boosters.get(i).update();
                 if (boosters.get(i).isConsumed() && boosters.get(i).getTimeCounter() == boosters.get(i).getLimit())
                 {
+                    //removing effects of ended boosters and boosters themselves
                     if (boosters.get(i) instanceof Speed_booster_obj) player.recalculateSpeed();
                     else if (boosters.get(i) instanceof Wall_piercer_booster_obj) player.setEthereal(false);
                     else if (boosters.get(i) instanceof Invisibility_booster_obj) player.setInvisible(false);
@@ -218,6 +216,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
                     boosters.remove(i);
                     repaint();
                 }
+                //removing boosters on the map
                 else if (boosters.get(i).getTimeCounter() == 420) {
                     eatablesPanel.remove(boosters.get(i));
                     boosters.remove(i);
@@ -240,9 +239,11 @@ public class GamePanel extends JPanel implements Runnable, Resizable
                 ghosts.clear();
                 boosters.clear();
                 repaint();
+                //starting to play death animation
                 deathAnimState = deathAnimGoes;
             }
             else if (deathAnimState == deathAnimEnded && player.getLives() != 0) {
+                //resetting the game
                 player.setDefaultValues();
                 setupGame();
                 deathAnimState = deathStated;
@@ -254,6 +255,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         }
         else if (gameState == GameState.LEVELCHANGE) {
             if (tileManager.getTextureChangeCounter() == 1) { //means we're only in the start of changing the level
+                //cleaning everything
                 for (Ghost ghost : ghosts) {
                     charactersPanel.remove(ghost);
                 }
@@ -273,25 +275,25 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     }
 
     private void redraw() {
-        //drawing points & pellets
+        //redrawing points & pellets
         for (Entity object : objects) {
             object.redraw();
         }
 
-        //drawing boosters
+        //redrawing boosters
         for (Booster booster : boosters) {
             booster.redraw();
         }
 
-        //drawing ghosts
+        //redrawing ghosts
         for (Ghost ghost : ghosts) {
             ghost.redraw();
         }
 
-        //drawing player
+        //redrawing player
         player.redraw();
 
-        //drawing ui
+        //redrawing ui
         ui.redraw();
 
         //redrawing map if we are changing level
@@ -302,7 +304,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
 
     @Override
     public void resize() {
-
+        //changing dimensions
         maxScreenWidth = widthTileSize * maxScreenColumn;
         maxScreenHeight = heightTileSize * maxScreenHeight;
         widthScale = (double) widthTileSize / originalTileSize;
@@ -310,7 +312,9 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         widthRatio = (double) widthTileSize / prevWidthTileSize;
         heightRatio = (double) heightTileSize / prevHeightTileSize;
 
-        //resizing(recounting) everything
+        //resizing(recounting) everything:
+
+        //labels
         layeredPane.setBounds(this.getBounds());
         mapPanel.setBounds(this.getBounds());
         eatablesPanel.setBounds(this.getBounds());
@@ -346,6 +350,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     }
 
     public void exit() {
+        //ending of the game
         setGameThread(null);
         getWindow().dispose();
     }

@@ -13,12 +13,15 @@ public class Main
         SwingUtilities.invokeLater(() -> new GameMenu());
     }
 
+    //method, which starts the game
     static void createGameWindow(JFrame parentFrame, String mapName, GameMenu gm) {
+        //creating game window
         JFrame window = new JFrame();
         window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         window.setBackground(Color.BLACK);
         window.setTitle("Pacman Game");
 
+        //creating game panel
         GamePanel gp = new GamePanel(window, mapName);
         gp.addComponentListener(new Resizer(window));
         window.add(gp);
@@ -30,6 +33,7 @@ public class Main
         gp.setupGame();
         gp.startGameThread();
 
+        //listener to open menu window after finishing of the game
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -45,7 +49,7 @@ public class Main
     }
 
     private static void changeToMainMenu(GameMenu gm, GamePanel gp, Frame parentFrame) {
-        gm.setLastScorePlayed(gp.getMaxScreenColumn());
+        gm.setLastScorePlayed(gp.getScore());
         gm.setLastTimePlayed(gp.getUi().getGameTimeCounter());
         gm.changeWindow("ChooseNameHighscore");
         parentFrame.setState(JFrame.NORMAL);

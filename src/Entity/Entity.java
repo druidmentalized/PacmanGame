@@ -70,6 +70,7 @@ public abstract class Entity extends JLabel implements Resizable, Redrawable, Up
         //points exactly at centre of entity
         currentColumn = (x + collisionAreaRectangle.x + (gp.getWidthTileSize() / 2)) / gp.getWidthTileSize();
         currentRow = (y + collisionAreaRectangle.y + (gp.getHeightTileSize() / 2)) / gp.getHeightTileSize();
+
         //adjusting point to its movement
         switch (direction) {
             case UP -> currentRow = (y + collisionAreaRectangle.y + collisionAreaRectangle.height - vspeed) / gp.getHeightTileSize();
@@ -77,6 +78,8 @@ public abstract class Entity extends JLabel implements Resizable, Redrawable, Up
             case DOWN -> currentRow = (y + collisionAreaRectangle.y) / gp.getHeightTileSize();
             case RIGHT -> currentColumn = (x + collisionAreaRectangle.x) / gp.getWidthTileSize();
         }
+
+        //if changed, return true
         if ((currentRow != prevRow) || (currentColumn != prevColumn)) {
             prevRow = currentRow;
             prevColumn = currentColumn;

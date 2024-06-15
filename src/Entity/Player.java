@@ -189,8 +189,9 @@ public class Player extends Entity {
             x = 0;
         }
 
+        //to change player's direction animation instantly
         if (isDirectionChanged()) {
-            getAnimationThread().interrupt(); //to change player's direction animation instantly
+            getAnimationThread().interrupt();
             setDirectionChanged(false);
         }
 
@@ -212,6 +213,7 @@ public class Player extends Entity {
             gp.getKeyHandler().setLeftPressed(false);
         }
 
+        //checking only if on the next tile or queued direction is something
         if (tileChanged() || direction == Direction.IDLE) {
             //checking would we be able to move if we change direction
             gp.getCollisionChecker().checkIfCanMove(this, nextDirection);
@@ -248,6 +250,7 @@ public class Player extends Entity {
     }
 
     private void pickUpObject(int index, ArrayList<? extends Entity> passedObjects) {
+        //checking if we actually interacted with something
         if (index != -1) {
             if (passedObjects.get(index) instanceof Point_obj) {
                 gp.setScore(gp.getScore() + 10);
@@ -306,7 +309,7 @@ public class Player extends Entity {
 
     private void interactWithGhost(int index) {
         if (index != -1) {
-            if (gp.isPelletEaten() && !gp.getGhosts().get(index).isEaten()) {
+            if (gp.isPelletEaten() && !gp.getGhosts().get(index).isEaten() && !gp.getGhosts().get(index).isWasEatenDuringPellet())  {
                 eatenGhosts++;
                 gp.getGhosts().get(index).setFrozen(false);
                 gp.getGhosts().get(index).setEaten(true);
@@ -318,11 +321,13 @@ public class Player extends Entity {
                 //counting points for eaten ghosts and awarding player
                 int awardedPoints = (int)Math.pow(2, eatenGhosts) * 100;
                 gp.setScore(gp.getScore() + awardedPoints);
+
                 //displaying these points(by adding them into messagesFlow in UI class)
                 JLabel ghostDeadMessage = new JLabel(String.valueOf(awardedPoints));
                 ghostDeadMessage.setBounds(x, y, gp.getWidthTileSize() * 2, gp.getHeightTileSize());
                 gp.getUi().getMessagesFlow().add(ghostDeadMessage);
                 gp.getUiPanel().add(ghostDeadMessage);
+
                 //setting the counter for this message
                 gp.getUi().getMessagesCounter().add(60); // for 60 updates -- exactly one second
             }

@@ -19,7 +19,7 @@ public class Highscore implements Serializable
 
     @Override
     public String toString() {
-        return playerName + ": " + points + "pts " + time + " seconds";
+        return playerName + ": " + points + " pts, " + time + " s";
     }
     public static void placeInFile(ArrayList<Highscore> highscoresList) {
         try {

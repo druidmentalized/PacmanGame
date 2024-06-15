@@ -33,6 +33,7 @@ public class Pinky extends Ghost
 
     @Override
     protected Point findInChaseMode() {
+        //counting 4 tiles ahead of pacman direction of movement
         switch (gp.getPlayer().direction) {
             case UP -> {
                 return new Point(gp.getPlayer().x, gp.getPlayer().y - (gp.getHeightTileSize() * 4));

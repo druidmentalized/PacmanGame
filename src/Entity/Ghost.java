@@ -264,6 +264,7 @@ public abstract class Ghost extends Entity {
                 goingOutOfCage = true;
                 recalculateSpeed();
             }
+            //getting to normal state after going out of cage
             else if (goingOutOfCage && (currentColumn == outOfCageCoords.x / gp.getWidthTileSize()
                     || currentColumn == outOfCageCoords.x / gp.getWidthTileSize() - 1) &&
                     (currentRow == outOfCageCoords.y / gp.getHeightTileSize())) {
