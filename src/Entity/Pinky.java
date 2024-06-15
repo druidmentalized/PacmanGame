@@ -32,22 +32,22 @@ public class Pinky extends Ghost
     }
 
     @Override
-    protected int[] findInChaseMode() {
-        switch (gp.player.direction) {
+    protected Point findInChaseMode() {
+        switch (gp.getPlayer().direction) {
             case UP -> {
-                return new int[]{gp.player.x, gp.player.y - (gp.tileSize * 4)};
+                return new Point(gp.getPlayer().x, gp.getPlayer().y - (gp.getHeightTileSize() * 4));
             }
             case DOWN -> {
-                return new int[]{gp.player.x ,gp.player.y + (gp.tileSize * 4)};
+                return new Point(gp.getPlayer().x ,gp.getPlayer().y + (gp.getHeightTileSize() * 4));
             }
             case RIGHT -> {
-                return new int[]{gp.player.x + (gp.tileSize * 4), gp.player.y};
+                return new Point(gp.getPlayer().x + (gp.getWidthTileSize() * 4), gp.getPlayer().y);
             }
             case LEFT -> {
-                return new int[]{gp.player.x - (gp.tileSize * 4), gp.player.y};
+                return new Point(gp.getPlayer().x - (gp.getWidthTileSize() * 4), gp.getPlayer().y);
             }
             default -> {
-                return new int[]{gp.player.x, gp.player.y};
+                return new Point(gp.getPlayer().x, gp.getPlayer().y);
             }
         }
     }

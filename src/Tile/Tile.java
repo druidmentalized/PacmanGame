@@ -1,14 +1,17 @@
 package Tile;
 
 import Main.GamePanel;
+import Main.Resizable;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class Tile {
+public class Tile extends JLabel {
     private static final String[] tileTypes = {
             "", "", "", "", "", "", "", "", "", "",
             //-----------------------------------BORDERS----------------------------------------------------//
@@ -30,11 +33,12 @@ public class Tile {
     };
     private BufferedImage image;
     private BufferedImage whiteImage;
-    public boolean collision;
-    public Rectangle collisionAreaRectangle;
-    public int tileType;
+    private boolean collision;
+    private int tileType;
+    private final GamePanel gp;
 
     public Tile(int tileType, String color, GamePanel gp) {
+        this.gp = gp;
         this.tileType = tileType;
         collision = tileType != 10 && tileType != 11 && tileType != 12;
         String pathName;
@@ -53,13 +57,52 @@ public class Tile {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        setIcon(getScaledIcon(image));
     }
 
+
+
+    //GETTERS & SETTERS
+
+    //getters
+    public ImageIcon getScaledIcon(BufferedImage image) {
+        Image scaledImage = image.getScaledInstance(gp.getWidthTileSize(), gp.getHeightTileSize(), Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImage);
+    }
     public BufferedImage getImage() {
         return image;
     }
-
     public BufferedImage getWhiteImage() {
         return whiteImage;
+    }
+    public boolean isCollision() {
+        return collision;
+    }
+
+    public int getTileType() {
+        return tileType;
+    }
+
+    public GamePanel getGp() {
+        return gp;
+    }
+
+
+    //setters
+
+    public void setImage(BufferedImage image) {
+        this.image = image;
+    }
+
+    public void setWhiteImage(BufferedImage whiteImage) {
+        this.whiteImage = whiteImage;
+    }
+
+    public void setCollision(boolean collision) {
+        this.collision = collision;
+    }
+
+    public void setTileType(int tileType) {
+        this.tileType = tileType;
     }
 }

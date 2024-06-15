@@ -32,16 +32,14 @@ public class Inky extends Ghost {
     }
 
     @Override
-    protected int[] findInChaseMode() {
+    protected Point findInChaseMode() {
         //counting tile difference between pacman and blinky
-        int pacmanColumn = (gp.player.x + gp.player.collisionAreaRectangle.x) / gp.tileSize;
-        int pacmanRow = (gp.player.y + gp.player.collisionAreaRectangle.y) / gp.tileSize;
-        int xTileDifference = gp.ghosts.getFirst().currentColumn - pacmanColumn;
-        int yTileDifference = gp.ghosts.getFirst().currentRow - pacmanRow;
+        int xTileDifference = gp.getGhosts().getFirst().currentColumn - gp.getPlayer().currentColumn;
+        int yTileDifference = gp.getGhosts().getFirst().currentRow - gp.getPlayer().currentRow;
 
         //target tile is doubled this difference
-        int targetX = (gp.ghosts.getFirst().currentColumn - (xTileDifference * 2)) * gp.tileSize;
-        int targetY = (gp.ghosts.getFirst().currentRow - (yTileDifference * 2)) * gp.tileSize;
-        return new int[]{targetX, targetY};
+        int targetX = (gp.getGhosts().getFirst().currentColumn - (xTileDifference * 2)) * gp.getWidthTileSize();
+        int targetY = (gp.getGhosts().getFirst().currentRow - (yTileDifference * 2)) * gp.getHeightTileSize();
+        return new Point(targetX, targetY);
     }
 }

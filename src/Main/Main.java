@@ -13,36 +13,43 @@ public class Main
         SwingUtilities.invokeLater(() -> new GameMenu());
     }
 
-    static void createGameWindow(JFrame parentFrame, String mapName, ArrayList<String> boostersCollection) {
+    static void createGameWindow(JFrame parentFrame, String mapName, GameMenu gm) {
         JFrame window = new JFrame();
         window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         window.setBackground(Color.BLACK);
         window.setTitle("Pacman Game");
 
-        GamePanel gamePanel = new GamePanel(window, mapName, boostersCollection);
-        window.add(gamePanel);
+        GamePanel gp = new GamePanel(window, mapName);
+        gp.addComponentListener(new Resizer(window));
+        window.add(gp);
 
         window.pack();
-        window.setResizable(false);
         window.setLocationRelativeTo(null);
         window.setVisible(true);
 
-        gamePanel.setupGame();
-        gamePanel.startGameThread();
+        gp.setupGame();
+        gp.startGameThread();
 
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                parentFrame.setState(JFrame.NORMAL);
-                parentFrame.setVisible(true);
+                changeToMainMenu(gm, gp, parentFrame);
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
-                parentFrame.setState(JFrame.NORMAL);
-                parentFrame.setVisible(true);
+                changeToMainMenu(gm, gp, parentFrame);
             }
         });
+
+    }
+
+    private static void changeToMainMenu(GameMenu gm, GamePanel gp, Frame parentFrame) {
+        gm.setLastScorePlayed(gp.getMaxScreenColumn());
+        gm.setLastTimePlayed(gp.getUi().getGameTimeCounter());
+        gm.changeWindow("ChooseNameHighscore");
+        parentFrame.setState(JFrame.NORMAL);
+        parentFrame.setVisible(true);
     }
 
 }

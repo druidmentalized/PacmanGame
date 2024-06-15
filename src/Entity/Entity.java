@@ -1,40 +1,41 @@
 package Entity;
 
-import Main.Direction;
-import Main.GamePanel;
+import Main.*;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public abstract class Entity
+public abstract class Entity extends JLabel implements Resizable, Redrawable, Updatable
 {
     //SYSTEM
-    public static GamePanel gp;
-    public Thread animationThread;
-    public boolean animationRunning = true;
+    protected GamePanel gp;
+    private Thread animationThread;
+    protected static boolean animationRunning = true;
 
     //INFO
-    public Direction direction = Direction.IDLE;
-    public int x;
-    public int y;
-    protected int[] startPoint;
-    public int currentRow = 0;
-    public int currentColumn = 0;
+    protected Direction direction = Direction.IDLE;
+    protected int x;
+    protected int y;
+    protected int currentRow = 0;
+    protected int currentColumn = 0;
     protected int prevRow = 0;
     protected int prevColumn = 0;
-    public int speed;
-    public BufferedImage up1, up2, up3, down1, down2, down3, right1, right2, right3, left1, left2,
+    protected double baseSpeed;
+    protected int hspeed;
+    protected int vspeed;
+    protected BufferedImage up1, up2, up3, down1, down2, down3, right1, right2, right3, left1, left2,
             left3, idle1, idle2;
-    public BufferedImage currentImage;
-    public boolean directionChanged = false;
-    public int spriteNum = 0;
+    protected BufferedImage currentImage;
+    private boolean directionChanged = false;
+    protected int spriteNum = 0;
 
     //COLLISION
-    public Rectangle collisionAreaRectangle;
-    public int collisionAreaDefaultX, collisionAreaDefaultY;
-    public int collisionAreaDefaultWidth, collisionAreaDefaultHeight;
+    protected Rectangle collisionAreaRectangle;
+    private int collisionAreaDefaultX, collisionAreaDefaultY;
+    protected double baseCollisionStart, baseCollisionEnd;
     public boolean collision;
 
     //CHARACTERISTICS
@@ -43,7 +44,7 @@ public abstract class Entity
         this.gp = gp;
     }
 
-    public BufferedImage getImage(String filePath) {
+    protected BufferedImage getImage(String filePath) {
         try {
             return ImageIO.read(new File(filePath + ".png"));
         } catch (IOException e) {
@@ -51,25 +52,30 @@ public abstract class Entity
             return null;
         }
     }
+    protected ImageIcon getScaledIcon(BufferedImage image) {
+        if (image == null) return null;
+        Image scaledImage = image.getScaledInstance((int)(gp.getWidthTileSize() * 1.5), (int)(gp.getHeightTileSize() * 1.5), Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImage);
+    }
 
-    protected void setCollisionAreaRectangle(int x, int y, int width, int height) {
-        collisionAreaRectangle = new Rectangle(x, y, width, height);
-        collisionAreaDefaultX = x;
-        collisionAreaDefaultY = y;
-        collisionAreaDefaultWidth = width;
-        collisionAreaDefaultHeight = height;
+    protected void setCollisionAreaRectangle() {
+        collisionAreaRectangle = new Rectangle ((int)(baseCollisionStart * gp.getWidthScale())
+                , (int)(baseCollisionStart * gp.getHeightScale()), (int)(baseCollisionEnd * gp.getWidthScale()),
+                (int)(baseCollisionEnd * gp.getHeightScale()));
+        collisionAreaDefaultX = collisionAreaRectangle.x;
+        collisionAreaDefaultY = collisionAreaRectangle.y;
     }
 
     protected boolean tileChanged() {
         //points exactly at centre of entity
-        currentColumn = (x + collisionAreaRectangle.x + (gp.tileSize / 2)) / gp.tileSize;
-        currentRow = (y + collisionAreaRectangle.y + (gp.tileSize / 2)) / gp.tileSize;
+        currentColumn = (x + collisionAreaRectangle.x + (gp.getWidthTileSize() / 2)) / gp.getWidthTileSize();
+        currentRow = (y + collisionAreaRectangle.y + (gp.getHeightTileSize() / 2)) / gp.getHeightTileSize();
         //adjusting point to its movement
         switch (direction) {
-            case UP -> currentRow = (y + collisionAreaRectangle.y + collisionAreaRectangle.height - speed) / gp.tileSize;
-            case LEFT -> currentColumn = (x + collisionAreaRectangle.x + collisionAreaRectangle.width - speed) / gp.tileSize;
-            case DOWN -> currentRow = (y + collisionAreaRectangle.y) / gp.tileSize;
-            case RIGHT -> currentColumn = (x + collisionAreaRectangle.x) / gp.tileSize;
+            case UP -> currentRow = (y + collisionAreaRectangle.y + collisionAreaRectangle.height - vspeed) / gp.getHeightTileSize();
+            case LEFT -> currentColumn = (x + collisionAreaRectangle.x + collisionAreaRectangle.width - hspeed) / gp.getWidthTileSize();
+            case DOWN -> currentRow = (y + collisionAreaRectangle.y) / gp.getHeightTileSize();
+            case RIGHT -> currentColumn = (x + collisionAreaRectangle.x) / gp.getWidthTileSize();
         }
         if ((currentRow != prevRow) || (currentColumn != prevColumn)) {
             prevRow = currentRow;
@@ -79,61 +85,80 @@ public abstract class Entity
         else return false;
     }
 
+    public void recalculateSpeed() {
+        hspeed = (int)(baseSpeed * gp.getWidthScale());
+        vspeed = (int)(baseSpeed * gp.getHeightScale());
+    }
+
+    private void recalculatePosition() {
+        x = (int)Math.round((x * gp.getWidthRatio()));
+        y = (int)Math.round((y * gp.getHeightRatio()));
+    }
+
     public abstract void setDefaultValues();
     protected abstract void loadImages();
     protected abstract Thread createAnimationThread(int delay);
+    @Override
     public abstract void update();
 
-    public void draw(Graphics2D g2) {
-        g2.drawImage(currentImage, x, y, (int)(gp.tileSize * 1.5), (int)(gp.tileSize * 1.5), null);
-
-        //DEBUG
-        if (gp.keyHandler.debugPressed) {
-            g2.setFont(new Font("Arial", Font.PLAIN, 13));
-            g2.setStroke(new BasicStroke(1));
-            if (this instanceof Player){
-                g2.setColor(Color.red);
-            }
-            else if (this instanceof Ghost) {
-                g2.setColor(Color.GREEN);
-            }
-            collisionAreaRectangle.x = x + collisionAreaRectangle.x;
-            collisionAreaRectangle.y = y + collisionAreaRectangle.y;
-            g2.draw(collisionAreaRectangle);
-            collisionAreaRectangle.x = collisionAreaDefaultX;
-            collisionAreaRectangle.y = collisionAreaDefaultY;
-
-            g2.setColor(Color.WHITE);
-            String cords;
-            if (this instanceof Player){
-                cords = "X: " + (x + collisionAreaRectangle.x) + ", Y: " + (y + collisionAreaRectangle.y) +
-                        ", column: " + ((x + collisionAreaRectangle.x)) / gp.tileSize + ", row: " +
-                        ((y + collisionAreaRectangle.y) / gp.tileSize) + ", direction: " + direction;
-                g2.drawString(cords, 20, gp.getMaxScreenHeight() - 20);
-            }
-            if (this instanceof Ghost) {
-                if (this instanceof Blinky) {
-                    g2.setColor(Color.RED);
-                }
-                else if (this instanceof Pinky){
-                    g2.setColor(Color.PINK);
-                }
-                else if (this instanceof Inky) {
-                    cords = " X: " + (x + collisionAreaRectangle.x) + ", Y: " + (y + collisionAreaRectangle.y) +
-                            ", column: " + ((x + collisionAreaRectangle.x)) / gp.tileSize + ", row: " +
-                            ((y + collisionAreaRectangle.y) / gp.tileSize) + ", direction: " + direction;
-                    g2.drawString(cords, 15 * gp.tileSize, gp.getMaxScreenHeight() - 20);
-                    g2.setColor(new Color(0, 255, 255));
-                }
-                else if (this instanceof Clyde) g2.setColor(new Color(255, 185, 81));
-                g2.setStroke(new BasicStroke(3));
-                Rectangle targetRect = new Rectangle(((Ghost) this).xy[0], ((Ghost) this).xy[1], 24, 24);
-                g2.draw(targetRect);
-            }
-        }
+    @Override
+    public void redraw() {
+        setIcon(getScaledIcon(currentImage));
+        setLocation(x, y);
     }
 
-    public void setStartPoint(int[] startPoint) {
-        this.startPoint = startPoint;
+    @Override
+    public void resize() {
+        recalculatePosition();
+        recalculateSpeed();
+        setCollisionAreaRectangle();
+    }
+
+    // GETTERS & SETTERS
+    //getters
+    public Thread getAnimationThread() {
+        return animationThread;
+    }
+    public Direction getDirection() {
+        return direction;
+    }
+    @Override
+    public int getX() {
+        return x;
+    }
+    @Override
+    public int getY() {
+        return y;
+    }
+    public int getHspeed() {
+        return hspeed;
+    }
+    public int getVspeed() {
+        return vspeed;
+    }
+    public boolean isDirectionChanged() {
+        return directionChanged;
+    }
+    public Rectangle getCollisionAreaRectangle() {
+        return collisionAreaRectangle;
+    }
+    public int getCollisionAreaDefaultX() {
+        return collisionAreaDefaultX;
+    }
+    public int getCollisionAreaDefaultY() {
+        return collisionAreaDefaultY;
+    }
+
+    //-------------------------------
+    //setters
+    public static void setAnimationRunning(boolean animRun) {
+        animationRunning = animRun;
+    }
+    public void setAnimationThread(Thread animationThread) {
+        this.animationThread = animationThread;
+    }
+
+    public void setDirectionChanged(boolean directionChanged) {
+        this.directionChanged = directionChanged;
     }
 }

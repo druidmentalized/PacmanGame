@@ -6,73 +6,129 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import Entity.Ghost;
 import Object.*;
+import Entity.Point;
 
-public class GamePanel extends JPanel implements Runnable
+public class GamePanel extends JPanel implements Runnable, Resizable
 {
     //SCREEN SETTINGS
-    final int originalTileSize = 8; // 8x8 tile
-    public final int scale = 3;
-    public final int tileSize = originalTileSize * scale; //24x24 tile
-    public int maxScreenColumn;
-    public int maxScreenRow;
-    private final int maxScreenHeight;
-    private final int maxScreenWidth;
+    private final int originalTileSize = 8;
+    //public int tileSize = 24; //24x24 tile(basic size)
+    private int widthTileSize; // 24 basic size
+    private int heightTileSize; // 24 basic size
+    private int prevWidthTileSize;
+    private int prevHeightTileSize;
+    private double widthScale;
+    private double heightScale;
+    private double widthRatio;
+    private double heightRatio;
+    private int maxScreenColumn;
+    private int maxScreenRow;
+    private int maxScreenHeight;
+    private int maxScreenWidth;
 
     //ENTITIES & OBJECTS
-    public Player player;
-    public ArrayList<Entity> objects = new ArrayList<>();
-    public ArrayList<Ghost> ghosts = new ArrayList<>();
-    public ArrayList<String> boostersCollection = new ArrayList<>(Arrays.asList("Speed booster",
+    private final Player player;
+    private final ArrayList<Entity> objects = new ArrayList<>();
+    private final ArrayList<Ghost> ghosts = new ArrayList<>();
+    private final ArrayList<Booster> boosters = new ArrayList<>();
+    private final ArrayList<String> boostersCollection = new ArrayList<>(Arrays.asList("Speed booster",
             "Heart",
             "Wall piercer",
             "Invisibility mode",
             "Ghost freezer"));
-    private String mapName;
-    public ArrayList<Booster> boosters = new ArrayList<>();
     private double[][] mapConstrains;
 
 
     //GAME SETTINGS
-    private final int FPS = 60;
-    public int score = 0;
-    public int level = 1;
-    public GameState gameState = GameState.PLAY;
-    public boolean pelletEaten = false;
-    public boolean freezerEaten = false;
+    private int score = 0;
+    private int level = 1;
+    private GameState gameState = GameState.PLAY;
+    private boolean pelletEaten = false;
+    private boolean freezerEaten = false;
 
     //SYSTEM
-    private JFrame window;
-    public KeyHandler keyHandler = new KeyHandler(this);
-    public TileManager tileManager = new TileManager(this);
-    public CollisionChecker collisionChecker = new CollisionChecker(this);
-    public UI ui = new UI(this);
-    Thread gameThread;
-    public GhostBehaviour behaviourThreadTask = new GhostBehaviour(this);
-    public Thread ghostBehaviour;
+    private final JFrame window;
+    private final KeyHandler keyHandler = new KeyHandler(this);
+    private final TileManager tileManager = new TileManager(this);
+    private final CollisionChecker collisionChecker = new CollisionChecker(this);
+    private final UI ui = new UI(this);
+    private Thread gameThread;
+    private final GhostBehaviour ghostsBehaviourThreadTask = new GhostBehaviour(this);
+    private Thread ghostBehaviour;
+    private final JLayeredPane layeredPane;
+    private final JPanel mapPanel;
+    private final JPanel eatablesPanel;
+    private final JPanel uiPanel;
+    private final JPanel charactersPanel;
+
 
     //DEATH PROCESSING
-    public final byte deathStated = 0;
-    public final byte deathAnimGoes = 1;
-    public final byte deathAnimEnded = 2;
-    public byte deathAnimState = deathStated;
+    public static final byte deathStated = 0;
+    public static final byte deathAnimGoes = 1;
+    public static final byte deathAnimEnded = 2;
+    private byte deathAnimState = deathStated;
 
-    public GamePanel(JFrame window, String mapName, ArrayList<String> boostersCollection) {
+    public GamePanel(JFrame window, String mapName) {
+        setLayout(null);
+        widthTileSize = 24; // basic size
+        heightTileSize = 24; // basic size
+        widthScale = (double) widthTileSize / originalTileSize;
+        heightScale = (double) heightTileSize / originalTileSize;
         this.window = window;
-        this.mapName = mapName;
-        tileManager.loadMap(mapName);
-        maxScreenWidth = maxScreenColumn * tileSize;
-        maxScreenHeight = maxScreenRow * tileSize;
+
+        layeredPane = new JLayeredPane();
+        layeredPane.setLayout(null);
+
+        //creating map panel
+        mapPanel = new JPanel(new GridBagLayout());
+        mapPanel.setBackground(Color.BLACK);
+
+        //creating eatables panel
+        eatablesPanel = new JPanel(null);
+        eatablesPanel.setOpaque(false);
+
+        //creating ui panel
+        uiPanel = new JPanel(null);
+        uiPanel.setOpaque(false);
+
+        //creating characters panel
+        charactersPanel = new JPanel(null);
+        charactersPanel.setOpaque(false);
+
+        //loading map and setting default resolution
+        tileManager.loadMap(mapName, mapPanel);
+        eatablesPanel.setBounds(mapPanel.getBounds());
+        charactersPanel.setBounds(mapPanel.getBounds());
+        layeredPane.setBounds(mapPanel.getBounds());
+        layeredPane.add(mapPanel, Integer.valueOf(1));
+        layeredPane.add(eatablesPanel, Integer.valueOf(2));
+        layeredPane.add(charactersPanel, Integer.valueOf(3));
+        layeredPane.add(uiPanel, Integer.valueOf(4));
+
+        this.add(layeredPane);
+
+        //window.setPreferredSize(mapPanel.getPreferredSize());
+
+        maxScreenWidth = maxScreenColumn * widthTileSize;
+        maxScreenHeight = maxScreenRow * heightTileSize;
         this.setPreferredSize(new Dimension(maxScreenWidth, maxScreenHeight));
         this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
         this.addKeyListener(keyHandler);
         this.setFocusable(true);
+
+
+
         //this.boostersCollection = boostersCollection;
+
+
+
         //adding player
         player = new Player(this);
+
+        ui.prepareUI();
     }
 
     public void setupGame() {
@@ -88,22 +144,28 @@ public class GamePanel extends JPanel implements Runnable
             ghostBehaviour.interrupt();
         }
         //making new behaviour thread
-        ghostBehaviour = new Thread(behaviourThreadTask);
+        ghostBehaviour = new Thread(ghostsBehaviourThreadTask);
         ghostBehaviour.start();
+        //making sure that animation threads are available for entities
+        Entity.setAnimationRunning(true);
+
+
 
         //filling field with pellets and dots if it is changing of the level
         if (gameState == GameState.LEVELCHANGE) {
+            //filling field with pellets and dots if it is changing of the level
             for (int row = 0; row < maxScreenRow; row++) {
                 for (int column = 0; column < maxScreenColumn; column++) {
-                    if (tileManager.tiles[row][column].tileType == 11) {
-                        objects.add(new Point_obj(this, column * tileSize, row * tileSize));
+                    if (tileManager.getTiles()[row][column].getTileType() == 11) {
+                        objects.add(new Point_obj(this, column * widthTileSize, row * heightTileSize));
                     }
-                    else if (tileManager.tiles[row][column].tileType == 12) {
-                        objects.add(new Power_pellet_obj(this, column * tileSize, row * tileSize));
+                    else if (tileManager.getTiles()[row][column].getTileType() == 12) {
+                        objects.add(new Power_pellet_obj(this, column * widthTileSize, row * heightTileSize));
                     }
                 }
             }
         }
+        repaint();
     }
 
 
@@ -115,28 +177,22 @@ public class GamePanel extends JPanel implements Runnable
 
     @Override
     public void run() {
-        //making cycle game cycle using delta time approach
-        double drawInterval = 1_000_000_000 / FPS;
-        double delta = 0;
-        long lastTime = System.nanoTime();
-        long currentTime;
-
         while(gameThread != null) {
-            currentTime = System.nanoTime();
+            update();
+            redraw();
 
-            delta += (currentTime - lastTime) / drawInterval;
-            lastTime = currentTime;
-
-            if (delta >= 1) {
-                update();
-                repaint();
-                delta--;
+            //delay 16 ms  = ~60 fps
+            try {
+                Thread.sleep(16);
+            }
+            catch (InterruptedException e) {
+                //doing nothing
             }
         }
     }
 
     public void update() {
-        if (keyHandler.pausePressed) gameState = GameState.PAUSE;
+        if (keyHandler.isPausePressed()) gameState = GameState.PAUSE;
         if (gameState == GameState.PLAY) {
             //updating
             player.update();
@@ -153,75 +209,145 @@ public class GamePanel extends JPanel implements Runnable
             //checking whether boosters ended
             for (int i = 0; i < boosters.size(); i++) {
                 boosters.get(i).update();
-                if (boosters.get(i).consumed && boosters.get(i).timeCounter == boosters.get(i).limit)
+                if (boosters.get(i).isConsumed() && boosters.get(i).getTimeCounter() == boosters.get(i).getLimit())
                 {
-                    if (boosters.get(i) instanceof Speed_booster_obj) player.speed -= 2;
-                    else if (boosters.get(i) instanceof Wall_piercer_booster_obj) player.ethereal = false;
-                    else if (boosters.get(i) instanceof Invisibility_booster_obj) player.invisible = false;
-                    else if (boosters.get(i) instanceof Ghosts_freezer_obj) {}
+                    if (boosters.get(i) instanceof Speed_booster_obj) player.recalculateSpeed();
+                    else if (boosters.get(i) instanceof Wall_piercer_booster_obj) player.setEthereal(false);
+                    else if (boosters.get(i) instanceof Invisibility_booster_obj) player.setInvisible(false);
+                    eatablesPanel.remove(boosters.get(i));
                     boosters.remove(i);
+                    repaint();
                 }
-                else if (boosters.get(i).timeCounter == 420) {
+                else if (boosters.get(i).getTimeCounter() == 420) {
+                    eatablesPanel.remove(boosters.get(i));
                     boosters.remove(i);
+                    repaint();
                 }
             }
         }
         else if (gameState == GameState.PAUSE) {
-            if (!keyHandler.pausePressed) gameState = GameState.PLAY;
+            if (!keyHandler.isPausePressed()) gameState = GameState.PLAY;
         }
         else if (gameState == GameState.DEAD) {
             if (deathAnimState == deathStated) {
+                //clearing panels from old ghosts and boosters, which are still on the field
+                for (Ghost ghost : ghosts) {
+                    charactersPanel.remove(ghost);
+                }
+                for (Booster booster : boosters) {
+                    eatablesPanel.remove(booster);
+                }
                 ghosts.clear();
                 boosters.clear();
+                repaint();
                 deathAnimState = deathAnimGoes;
             }
-            else if (deathAnimState == deathAnimEnded && player.lives != 0) {
+            else if (deathAnimState == deathAnimEnded && player.getLives() != 0) {
                 player.setDefaultValues();
                 setupGame();
                 deathAnimState = deathStated;
                 gameState = GameState.PLAY;
             }
+            else if (deathAnimState == deathAnimEnded && player.getLives() == 0) {
+                exit();
+            }
         }
         else if (gameState == GameState.LEVELCHANGE) {
-            if (tileManager.textureChangeCounter == 1) { //means we're only in the start of changing the level
+            if (tileManager.getTextureChangeCounter() == 1) { //means we're only in the start of changing the level
+                for (Ghost ghost : ghosts) {
+                    charactersPanel.remove(ghost);
+                }
                 ghosts.clear();
                 boosters.clear();
+                eatablesPanel.removeAll();
+                level++;
+                repaint();
             }
-            else if (tileManager.textureChangeCounter == 90) {
+            else if (tileManager.getTextureChangeCounter() == 90) {
                 player.setDefaultValues();
                 setupGame();
                 gameState = GameState.PLAY;
-                tileManager.textureChangeCounter = 0;
+                tileManager.setTextureChangeCounter(0);
             }
         }
     }
 
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        draw((Graphics2D)g);
-    }
-
-    public void draw(Graphics2D g2) {
-        //drawing tiles/map
-        tileManager.draw(g2);
+    private void redraw() {
         //drawing points & pellets
         for (Entity object : objects) {
-            object.draw(g2);
+            object.redraw();
         }
+
         //drawing boosters
         for (Booster booster : boosters) {
-            booster.draw(g2);
+            booster.redraw();
         }
+
         //drawing ghosts
         for (Ghost ghost : ghosts) {
-            ghost.draw(g2);
+            ghost.redraw();
         }
+
         //drawing player
-        player.draw(g2);
+        player.redraw();
+
         //drawing ui
-        ui.draw(g2);
+        ui.redraw();
+
+        //redrawing map if we are changing level
+        if (gameState == GameState.LEVELCHANGE) {
+            tileManager.redraw();
+        }
+    }
+
+    @Override
+    public void resize() {
+
+        maxScreenWidth = widthTileSize * maxScreenColumn;
+        maxScreenHeight = heightTileSize * maxScreenHeight;
+        widthScale = (double) widthTileSize / originalTileSize;
+        heightScale = (double) heightTileSize / originalTileSize;
+        widthRatio = (double) widthTileSize / prevWidthTileSize;
+        heightRatio = (double) heightTileSize / prevHeightTileSize;
+
+        //resizing(recounting) everything
+        layeredPane.setBounds(this.getBounds());
+        mapPanel.setBounds(this.getBounds());
+        eatablesPanel.setBounds(this.getBounds());
+        uiPanel.setBounds(this.getBounds());
+        charactersPanel.setBounds(this.getBounds());
+
+        //resizing tiles
+        tileManager.resize();
+
+        //resizing player
+        player.resize();
+
+        //resizing all ghosts and their targets
+        for (Ghost ghost : ghosts) {
+            ghost.resize();
+        }
+
+        //resizing all dots and pellets
+        for(Entity object : objects) {
+            object.resize();
+        }
+
+        //resizing all boosters
+        for (Booster booster : boosters) {
+            booster.resize();
+        }
+
+        //resizing ui
+        ui.resize();
+
+        repaint();
+        gameState = GameState.PLAY;
+    }
+
+    public void exit() {
+        setGameThread(null);
+        getWindow().dispose();
     }
 
     //GETTERS & SETTERS
@@ -230,15 +356,12 @@ public class GamePanel extends JPanel implements Runnable
     public JFrame getWindow() {
         return window;
     }
-
     public double[][] getMapConstrains() {
         return mapConstrains;
     }
-
     public int getMaxScreenColumn() {
         return maxScreenColumn;
     }
-
     public int getMaxScreenRow() {
         return maxScreenRow;
     }
@@ -248,19 +371,136 @@ public class GamePanel extends JPanel implements Runnable
     public int getMaxScreenHeight() {
         return maxScreenHeight;
     }
-//------------------------------------------------
+    public JPanel getCharactersPanel() {
+        return charactersPanel;
+    }
+    public JPanel getEatablesPanel() {
+        return eatablesPanel;
+    }
+    public JPanel getUiPanel() {
+        return uiPanel;
+    }
+    public Thread getGameThread() {
+        return gameThread;
+    }
+    public double getWidthRatio() {
+        return widthRatio;
+    }
+    public double getHeightRatio() {
+        return heightRatio;
+    }
+    public int getScore() {
+        return score;
+    }
+    public GameState getGameState() {
+        return gameState;
+    }
+    public int getWidthTileSize() {
+        return widthTileSize;
+    }
+    public int getHeightTileSize() {
+        return heightTileSize;
+    }
+    public double getWidthScale() {
+        return widthScale;
+    }
+    public double getHeightScale() {
+        return heightScale;
+    }
+    public Player getPlayer() {
+        return player;
+    }
+    public ArrayList<Entity> getObjects() {
+        return objects;
+    }
+    public ArrayList<Ghost> getGhosts() {
+        return ghosts;
+    }
+    public ArrayList<Booster> getBoosters() {
+        return boosters;
+    }
+    public ArrayList<String> getBoostersCollection() {
+        return boostersCollection;
+    }
+    public int getLevel() {
+        return level;
+    }
+    public boolean isPelletEaten() {
+        return pelletEaten;
+    }
+    public boolean isFreezerEaten() {
+        return freezerEaten;
+    }
+    public KeyHandler getKeyHandler() {
+        return keyHandler;
+    }
+    public TileManager getTileManager() {
+        return tileManager;
+    }
+    public CollisionChecker getCollisionChecker() {
+        return collisionChecker;
+    }
+    public UI getUi() {
+        return ui;
+    }
+    public GhostBehaviour getGhostsBehaviourThreadTask() {
+        return ghostsBehaviourThreadTask;
+    }
+    public Thread getGhostBehaviour() {
+        return ghostBehaviour;
+    }
+    public byte getDeathAnimGoes() {
+        return deathAnimGoes;
+    }
+    public byte getDeathAnimEnded() {
+        return deathAnimEnded;
+    }
+    public byte getDeathAnimState() {
+        return deathAnimState;
+    }
+
+    //------------------------------------------------
+
     //setters
     public void setMaxScreenColumn(int maxScreenColumn) {
         this.maxScreenColumn = maxScreenColumn;
     }
-
     public void setMaxScreenRow(int maxScreenRow) {
         this.maxScreenRow = maxScreenRow;
     }
-
     public void setMapConstrains(double[][] mapConstrains) {
         this.mapConstrains = mapConstrains;
-        int[] eatenGhostsCoords = new int[]{(int)(mapConstrains[5][0] * tileSize), (int)(mapConstrains[5][1] * tileSize)};
+        Point eatenGhostsCoords = new Point((int)(mapConstrains[5][0] * widthTileSize), (int)(mapConstrains[5][1] * heightTileSize));
         Ghost.setEatenCoords(eatenGhostsCoords);
+    }
+    public void setGameThread(Thread gameThread) {
+        this.gameThread = gameThread;
+    }
+    public void setScore(int score) {
+        this.score = score;
+    }
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+    }
+    public void setWidthTileSize(int widthTileSize) {
+        this.widthTileSize = widthTileSize;
+    }
+    public void setHeightTileSize(int heightTileSize) {
+        this.heightTileSize = heightTileSize;
+    }
+    public void setPrevWidthTileSize(int prevWidthTileSize) {
+        this.prevWidthTileSize = prevWidthTileSize;
+    }
+    public void setPrevHeightTileSize(int prevHeightTileSize) {
+        this.prevHeightTileSize = prevHeightTileSize;
+    }
+    public void setPelletEaten(boolean pelletEaten) {
+        this.pelletEaten = pelletEaten;
+    }
+    public void setFreezerEaten(boolean freezerEaten) {
+        this.freezerEaten = freezerEaten;
+    }
+    public void setDeathAnimState(byte deathAnimState) {
+        this.deathAnimState = deathAnimState;
     }
 }

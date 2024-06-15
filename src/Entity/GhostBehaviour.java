@@ -9,24 +9,25 @@ import static Entity.GhostState.*;
 
 public class GhostBehaviour implements Runnable {
     GamePanel gp;
+    private boolean threadRunning = true;
     private final static GhostState[] ghostStates = new GhostState[]{SCATTER, CHASE, SCATTER, CHASE, SCATTER, CHASE, SCATTER, CHASE};
     private static int[] stateTimings;
     private static int frightenedTiming;
     private static int frozenTiming;
-    public int frightenedCounter = 0;
-    public int ghostFreezerTimer = 0;
+    private int frightenedCounter = 0;
+    private int ghostFreezerTimer = 0;
     public GhostBehaviour(GamePanel gp) {
         this.gp = gp;
 
         //setting timings of states
-        switch(gp.level) {
+        switch(gp.getLevel()) {
             case 1 -> stateTimings = new int[]{7, 20, 7, 20, 5, 20, 5};
             case 2, 3, 4 -> stateTimings = new int[]{7, 20, 7, 20, 5, 1033, 1};
             default -> stateTimings = new int[]{5, 20, 5, 20, 5, 1033, 1};
         }
 
         //setting timings of fright
-        switch (gp.level) {
+        switch (gp.getLevel()) {
             case 1, 2 -> frightenedTiming = 6;
             case 3, 4, 5 -> frightenedTiming = 5;
             case 6, 7, 8 -> frightenedTiming = 4;
@@ -36,7 +37,7 @@ public class GhostBehaviour implements Runnable {
         }
 
         //setting timings of frozen state
-        switch (gp.level) {
+        switch (gp.getLevel()) {
             case 1, 2, 3 -> frozenTiming = 6;
             case 4, 5, 6 -> frozenTiming = 5;
             case 7, 8, 9 -> frozenTiming = 4;
@@ -49,8 +50,8 @@ public class GhostBehaviour implements Runnable {
         int secCounter = 0;
         int totalTimeCounter = 0;
         int currentState = -1;
-        while (true) {
-            if (gp.gameState == GameState.PLAY) {
+        while (threadRunning) {
+            if (gp.getGameState() == GameState.PLAY) {
                 totalTimeCounter++;
 
                 //changing ghosts states depending on level
@@ -63,14 +64,14 @@ public class GhostBehaviour implements Runnable {
                 frightenedCounter--;
                 //power pellet timer
                 if (frightenedCounter == 0) {
-                    gp.pelletEaten = false;
-                    for (Ghost ghost : gp.ghosts) {
-                        ghost.wasEatenDuringPellet = false;
-                        gp.player.eatenGhosts = 0;
-                        ghost.canDropBoosters = true;
+                    gp.setPelletEaten(false);
+                    for (Ghost ghost : gp.getGhosts()) {
+                        ghost.setWasEatenDuringPellet(false);
+                        gp.getPlayer().setEatenGhosts(0);
+                        ghost.setCanDropBoosters(true);
                     }
                 }
-                else if (frightenedCounter <= 0 && gp.pelletEaten) {
+                else if (frightenedCounter <= 0 && gp.isPelletEaten()) {
                     frightenedCounter = frightenedTiming;
                 }
 
@@ -78,53 +79,57 @@ public class GhostBehaviour implements Runnable {
                 //ghost freezer timer
                 ghostFreezerTimer--;
                 if (ghostFreezerTimer == 0) {
-                    gp.freezerEaten = false;
-                    for (Ghost ghost : gp.ghosts) {
-                        ghost.frozen = false;
-                        ghost.canDropBoosters = true;
+                    gp.setFreezerEaten(false);
+                    for (Ghost ghost : gp.getGhosts()) {
+                        ghost.setFrozen(false);
+                        ghost.setCanDropBoosters(true);
                     }
                 }
-                else if (ghostFreezerTimer < 0 && gp.freezerEaten) {
+                else if (ghostFreezerTimer < 0 && gp.isFreezerEaten()) {
                     ghostFreezerTimer = frozenTiming;
                 }
 
                 //updating ghosts states
-                for (Ghost ghost : gp.ghosts) {
+                for (Ghost ghost : gp.getGhosts()) {
                     if (totalTimeCounter == 5 && ghost instanceof Pinky) {
-                        ghost.goingOutOfCage = true;
+                        ghost.setGoingOutOfCage(true);
                     }
                     if (totalTimeCounter == 10 && ghost instanceof Inky) {
-                        ghost.goingOutOfCage = true;
+                        ghost.setGoingOutOfCage(true);
                     }
                     if (totalTimeCounter == 15 && ghost instanceof Clyde) {
-                        ghost.goingOutOfCage = true;
+                        ghost.setGoingOutOfCage(true);
                     }
                     ghost.state = ghostStates[currentState];
-                    if (gp.pelletEaten && !ghost.wasEatenDuringPellet) {
+                    if (gp.isPelletEaten() && !ghost.isWasEatenDuringPellet()) {
                         ghost.state = FRIGHTENED;
-                        ghost.animationThread.interrupt(); //to make his animation frightened instantly
-                        ghost.canDropBoosters = false;
+                        ghost.getAnimationThread().interrupt(); //to make his animation frightened instantly
+                        ghost.setCanDropBoosters(false);
                     }
-                    if (gp.freezerEaten && !ghost.wasEatenDuringPellet && !ghost.eaten) {
-                        ghost.frozen = true;
-                        ghost.animationThread.interrupt(); //to make his animation frozen instantly
-                        ghost.canDropBoosters = false;
+                    if (gp.isFreezerEaten() && !ghost.isWasEatenDuringPellet() && !ghost.isEaten()) {
+                        ghost.setFrozen(true);
+                        ghost.getAnimationThread().interrupt(); //to make his animation frozen instantly
+                        ghost.setCanDropBoosters(false);
                     }
-                    if (ghost.eaten) {
+                    if (ghost.isEaten()) {
                         ghost.state = EATEN;
-                        ghost.canDropBoosters = false;
+                        ghost.setCanDropBoosters(false);
                     }
-                    if (totalTimeCounter % 5 == 0 && ghost.canDropBoosters) {
+                    if (totalTimeCounter % 5 == 0 && ghost.isCanDropBoosters()) {
                         tryDropBooster(ghost);
                     }
                 }
+            }
+
+            if (gp.getGameThread() == null) {
+                threadRunning = false;
             }
 
             //updating every second
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                if (gp.gameState == GameState.DEAD) break; //in order to reset the timer after player dies
+                if (gp.getGameState() == GameState.DEAD) break; //in order to reset the timer after player dies
             }
         }
     }
@@ -132,12 +137,12 @@ public class GhostBehaviour implements Runnable {
     private void tryDropBooster(Ghost ghost) {
         Random random = new Random();
         if (random.nextInt(100) <= 25) {
-            switch (gp.boostersCollection.get(random.nextInt(gp.boostersCollection.size()))) {
-                case "Speed booster" -> gp.boosters.add(new Speed_booster_obj(gp, ghost.x, ghost.y));
-                case "Heart" -> gp.boosters.add(new Heart_booster_obj(gp, ghost.x, ghost.y));
-                case "Wall piercer" -> gp.boosters.add(new Wall_piercer_booster_obj(gp, ghost.x, ghost.y));
-                case "Invisibility mode" -> gp.boosters.add(new Invisibility_booster_obj(gp, ghost.x, ghost.y));
-                case "Ghost freezer" -> gp.boosters.add(new Ghosts_freezer_obj(gp, ghost.x, ghost.y));
+            switch (gp.getBoostersCollection().get(random.nextInt(gp.getBoostersCollection().size()))) {
+                case "Speed booster" -> gp.getBoosters().add(new Speed_booster_obj(gp, ghost.x, ghost.y));
+                case "Heart" -> gp.getBoosters().add(new Heart_booster_obj(gp, ghost.x, ghost.y));
+                case "Wall piercer" -> gp.getBoosters().add(new Wall_piercer_booster_obj(gp, ghost.x, ghost.y));
+                case "Invisibility mode" -> gp.getBoosters().add(new Invisibility_booster_obj(gp, ghost.x, ghost.y));
+                case "Ghost freezer" -> gp.getBoosters().add(new Ghosts_freezer_obj(gp, ghost.x, ghost.y));
             }
         }
     }
@@ -148,5 +153,27 @@ public class GhostBehaviour implements Runnable {
 
     public int getFrozenTiming() {
         return frozenTiming;
+    }
+
+    //GETTERS & SETTERS
+
+    //getters
+    public GamePanel getGp() {
+        return gp;
+    }
+    public int getFrightenedCounter() {
+        return frightenedCounter;
+    }
+    //----------------------------------------
+
+    //setters
+    public void setGp(GamePanel gp) {
+        this.gp = gp;
+    }
+    public void setFrightenedCounter(int frightenedCounter) {
+        this.frightenedCounter = frightenedCounter;
+    }
+    public void setGhostFreezerTimer(int ghostFreezerTimer) {
+        this.ghostFreezerTimer = ghostFreezerTimer;
     }
 }

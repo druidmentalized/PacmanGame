@@ -1,21 +1,26 @@
 package Main;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class UI {
+public class UI implements Resizable, Redrawable {
     GamePanel gp;
-    Graphics2D g2;
     private Font emulogic;
     private BufferedImage healthImage;
-    public ArrayList<Integer> messagesFlow = new ArrayList<>();
-    public ArrayList<Integer> messagesCounter = new ArrayList<>();
+    private JLabel scoreLabel;
+    private JLabel timerLabel;
+    private JLabel pauseLabel;
+    private final ArrayList<JLabel> healthLabels = new ArrayList<>();
+    private final ArrayList<JLabel> messagesFlow = new ArrayList<>();
+    private final ArrayList<Integer> messagesCounter = new ArrayList<>();
+    private int updateCounter = 0;
+    private int gameTimeCounter = 0;
 
     public UI(GamePanel gp) {
         this.gp = gp;
@@ -30,104 +35,155 @@ public class UI {
 
     }
 
-    public void draw(Graphics2D g2) {
-        this.g2 = g2;
-        g2.setFont(emulogic);
-        g2.setColor(Color.WHITE);
-        drawHUD();
+    public void prepareUI() {
+        //preparing scoreLabel
+        scoreLabel = createLabel(String.valueOf(gp.getScore()));
+        scoreLabel.setBounds(gp.getWidthTileSize(), gp.getHeightTileSize(), 5 * gp.getWidthTileSize(),
+                2 * gp.getHeightTileSize());
+        gp.getUiPanel().add(scoreLabel);
+
+        timerLabel = createLabel(String.valueOf(gameTimeCounter));
+        timerLabel.setBounds(gp.getMaxScreenWidth() / 2, gp.getWidthTileSize(), 5 * gp.getHeightTileSize(),
+                2 * gp.getHeightTileSize());
+        gp.getUiPanel().add(timerLabel);
+
+        pauseLabel = createLabel("PAUSE");
+        pauseLabel.setFont(pauseLabel.getFont().deriveFont(50F));
+        pauseLabel.setBounds(gp.getMaxScreenWidth() / 2 - 4 * gp.getWidthTileSize(), gp.getMaxScreenHeight() / 2 - 5 * gp.getHeightTileSize(),
+                20 * gp.getWidthTileSize(), 5 * gp.getHeightTileSize());
+        gp.getUiPanel().add(pauseLabel);
+
+
+        for (int i = 0; i < gp.getPlayer().getLives(); i++) {
+            addHealth();
+        }
+    }
+
+    @Override
+    public void redraw() {
+        redrawHUD();
+        updateCounter++;
+
+        //cycle, which counts time inside the UI class
+        if (updateCounter == 60) {
+            gameTimeCounter++;
+            updateCounter = 0;
+        }
+    }
+
+    private void redrawHUD() {
+        //drawing score
+        scoreLabel.setText(String.valueOf(gp.getScore()));
+        timerLabel.setText(String.valueOf(gameTimeCounter));
+
+        pauseLabel.setVisible(gp.getGameState() == GameState.PAUSE);
+
+        //drawing score for killing ghost(if exists)
         drawGhostKillPoints();
     }
 
     private void drawGhostKillPoints() {
         if (!messagesFlow.isEmpty()) {
-            g2.setColor(new Color(0, 255, 255));
-            g2.setFont(g2.getFont().deriveFont(11f));
-            //elements from the flow always go in triplets: amount of points, x and y coordinates
-            for (int i = 0; i < messagesFlow.size(); i += 3) {
-                g2.drawString(String.valueOf(messagesFlow.get(i)), messagesFlow.get(i + 1), messagesFlow.get(i + 2));
-                //decreasing the counter and check whether the time of message showing have passed
-                messagesCounter.set(i / 3, messagesCounter.get(i / 3) - 1);
-                //removing messages if counter ended
-                if (messagesCounter.get(i / 3) == 0) {
-                    messagesCounter.remove(i / 3);
-                    for (int j = 0; j < 3; j++) {
-                        messagesFlow.remove(i);
-                    }
+            for (int i = 0; i < messagesFlow.size(); i += 1) {
+                messagesFlow.get(i).setFont(emulogic);
+                messagesFlow.get(i).setFont(messagesFlow.get(i).getFont().deriveFont(11f));
+                messagesFlow.get(i).setForeground(new Color(0, 255, 255));
+                messagesCounter.set(i, messagesCounter.get(i) - 1);
+                if (messagesCounter.get(i) == 0) //means that time to show the message ended
+                {
+                    gp.getUiPanel().remove(messagesFlow.get(i));
+                    messagesFlow.remove(i);
+                    messagesCounter.remove(i);
+                    gp.getUiPanel().repaint();
                 }
             }
         }
     }
 
-    private void drawHUD() {
-        if (gp.player.lives > 0) {
-            drawScore();
-            drawHealth();
+    public void addHealth() {
+        JLabel healthLabel = new JLabel(new ImageIcon(healthImage.getScaledInstance((int)(gp.getWidthTileSize() * 1.5),
+                (int)(gp.getHeightTileSize() * 1.5), Image.SCALE_SMOOTH)));
+
+        if (!healthLabels.isEmpty()) {
+            healthLabel.setBounds(healthLabels.getLast().getBounds().x + (2 * gp.getWidthTileSize()),
+                    (int)(gp.getMaxScreenHeight() - (1.75 * gp.getHeightTileSize())),
+                    healthLabel.getIcon().getIconWidth(), healthLabel.getIcon().getIconHeight());
         }
-        else if (gp.player.lives == 0) {
-            drawEndScreen();
+        else {
+            healthLabel.setBounds(gp.getWidthTileSize(), (int)(gp.getMaxScreenHeight() - (1.75 * gp.getHeightTileSize())),
+                    healthLabel.getIcon().getIconWidth(), healthLabel.getIcon().getIconHeight());
+        }
+        healthLabels.add(healthLabel);
+        gp.getUiPanel().add(healthLabel);
+    }
+
+    public void deductHealth() {
+        gp.getUiPanel().remove(healthLabels.getLast());
+        healthLabels.removeLast();
+        gp.repaint();
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel returnLabel = new JLabel();
+        returnLabel.setFont(emulogic);
+        returnLabel.setFont(returnLabel.getFont().deriveFont(20f));
+        returnLabel.setForeground(Color.WHITE);
+        returnLabel.setText(text);
+        return returnLabel;
+    }
+
+    public void resize() {
+        //resizing score label
+        scoreLabel.setBounds(gp.getWidthTileSize(), gp.getHeightTileSize(),
+                (int)(scoreLabel.getWidth() * gp.getWidthRatio()), (int)(scoreLabel.getHeight() * gp.getHeightRatio()));
+        float newFontSize = (float)(scoreLabel.getFont().getSize() * gp.getWidthRatio());
+        scoreLabel.setFont(scoreLabel.getFont().deriveFont(newFontSize));
+
+        //resizing timer label
+        timerLabel.setBounds((int)(timerLabel.getX() * gp.getWidthRatio()), gp.getHeightTileSize(),
+                (int)(timerLabel.getWidth() * gp.getWidthRatio()), (int)(timerLabel.getHeight() * gp.getHeightRatio()));
+        newFontSize = (float)(timerLabel.getFont().getSize() * gp.getWidthRatio());
+        timerLabel.setFont(timerLabel.getFont().deriveFont(newFontSize));
+
+        //resizing pause label
+        pauseLabel.setBounds((int)(pauseLabel.getX() * gp.getWidthRatio()), (int)(pauseLabel.getY() * gp.getHeightRatio()),
+                (int)(pauseLabel.getWidth() * gp.getWidthRatio()), (int)(pauseLabel.getHeight() * gp.getHeightRatio()));
+        newFontSize = (float)(pauseLabel.getFont().getSize() * gp.getWidthRatio());
+        pauseLabel.setFont(pauseLabel.getFont().deriveFont(newFontSize));
+
+        //resizing health
+        for (JLabel healthLabel : healthLabels) {
+            healthLabel.setIcon(new ImageIcon(healthImage.getScaledInstance((int)(gp.getWidthTileSize() * 1.5),
+                    (int)(gp.getHeightTileSize() * 1.5), Image.SCALE_SMOOTH)));
+            healthLabel.setBounds((int)(healthLabel.getX() * gp.getWidthRatio()),
+                    (int)(healthLabel.getY() * gp.getHeightRatio()), healthLabel.getIcon().getIconWidth(),
+                    healthLabel.getIcon().getIconHeight()); {
+
+            }
+        }
+
+        //resizing messages of death(if exist)
+        for (JLabel deathLabel : messagesFlow) {
+            newFontSize = (float)(deathLabel.getFont().getSize() * gp.getWidthRatio());
+            deathLabel.setFont(deathLabel.getFont().deriveFont(newFontSize));
+            deathLabel.setBounds((int)(deathLabel.getBounds().x * gp.getWidthRatio()),
+                    (int)(deathLabel.getBounds().y * gp.getHeightRatio()),
+                    (int)(deathLabel.getWidth() * gp.getWidthRatio()),
+                    (int)(deathLabel.getHeight() * gp.getHeightRatio()));
         }
     }
 
-    private void drawScore() {
-        String message = String.valueOf(gp.score);
-        g2.setFont(g2.getFont().deriveFont(20f));
-        int x = gp.tileSize * 4 - (getMessageWidth(message) / 2);
-        int y = (int)(gp.tileSize * 1.5) + (getMessageHeight(message) / 2);
-        g2.drawString(message, x, y);
+
+    //GETTERS & SETTERS
+
+    //getters
+    public ArrayList<JLabel> getMessagesFlow() {
+        return messagesFlow;
     }
-
-    private void drawHealth() {
-        int shift = ((gp.tileSize * 2) - (int)(healthImage.getWidth() * 1.5)) / 2;
-        int x = shift;
-        int y = (gp.tileSize * (gp.maxScreenRow - 2)) + shift;
-        for (int i = 0; i < gp.player.lives; i++) {
-            g2.drawImage(healthImage, x, y, (int)(gp.tileSize * 1.5), (int)(gp.tileSize * 1.5), null);
-            x += gp.tileSize * 2;
-        }
+    public ArrayList<Integer> getMessagesCounter() {
+        return messagesCounter;
     }
-
-    private void drawEndScreen() {
-        //drawing semi transparent rectangle
-        g2.setColor(new Color(0, 0, 0, 200));
-        int rectWidth = 400;
-        int rectHeight = 500;
-        int rectX = (gp.getMaxScreenWidth() - rectWidth) / 2;
-        int rectY= (gp.getMaxScreenWidth() - rectHeight) / 2;
-        g2.fillRoundRect(rectX, rectY, rectWidth, rectHeight, 35, 35);
-        //drawing stroke
-        g2.setColor(Color.WHITE);
-        g2.drawRoundRect(rectX + 3, rectY + 3, rectWidth - 7, rectHeight - 7, 25, 25);
-        g2.setStroke(new BasicStroke(5));
-
-        //drawing score
-        g2.setFont(g2.getFont().deriveFont(20f));
-        String message = "Your score:";
-        int x = rectX + (rectWidth - getMessageWidth(message)) / 2;
-        rectY = rectY + getMessageHeight(message) + 30;
-        g2.drawString(message, x, rectY);
-
-        g2.setColor(Color.YELLOW);
-        g2.setFont(g2.getFont().deriveFont(30f));
-        message = String.valueOf(gp.score);
-        x = rectX + (rectWidth - getMessageWidth(message)) / 2;
-        rectY += getMessageHeight(message) + 10;
-        g2.drawString(message, x, rectY);
-
-
-        //drawing message to exit
-        g2.setColor(Color.WHITE);
-        g2.setFont(g2.getFont().deriveFont(20f));
-        message = "Press \"ESC\" to Exit";
-        x = rectX + (rectWidth - getMessageWidth(message)) / 2;
-        rectY += 150;
-        g2.drawString(message, x, rectY);
-    }
-
-    private int getMessageWidth(String message) {
-        return (int)g2.getFontMetrics().getStringBounds(message, g2).getWidth();
-    }
-
-    private int getMessageHeight(String message) {
-        return (int)g2.getFontMetrics().getStringBounds(message, g2).getHeight();
+    public int getGameTimeCounter() {
+        return gameTimeCounter;
     }
 }

@@ -1,5 +1,4 @@
 package Object;
-
 import Main.GamePanel;
 
 public class Wall_piercer_booster_obj extends Booster {

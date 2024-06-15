@@ -4,40 +4,45 @@ import Main.Direction;
 import Main.GamePanel;
 import Main.GameState;
 import Object.*;
-import java.awt.*;
+
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 public class Player extends Entity {
 
     Direction nextDirection = Direction.IDLE;
-    public int lives = 3;
+    private int lives = 3;
     private BufferedImage invisibleUp1, invisibleUp2, invisibleUp3, invisibleDown1, invisibleDown2, invisibleDown3,
     invisibleRight1, invisibleRight2, invisibleRight3, invisibleLeft1, invisibleLeft2, invisibleLeft3, invisibleIdle;
     private BufferedImage death4, death5, death6;
-    public int eatenGhosts = 0;
-    public boolean ethereal;
-    public boolean invisible;
+    private int eatenGhosts = 0;
+    private boolean ethereal;
+    private boolean invisible;
+
     public Player(GamePanel gp) {
         super(gp);
         loadImages();
         setDefaultValues();
+        gp.getCharactersPanel().add(this);
     }
 
-
     public void setDefaultValues() {
-        speed = 4;
+        baseSpeed = 1.34;
+        recalculateSpeed();
+        baseCollisionStart = 2.34;
+        baseCollisionEnd = 7.67;
+        setCollisionAreaRectangle();
         direction = Direction.IDLE;
-        x = (int)(gp.getMapConstrains()[0][0] * gp.tileSize);
-        y = (int)(gp.getMapConstrains()[0][1] * gp.tileSize);
-        setCollisionAreaRectangle((int)(2.34 * gp.scale), (int)(2.34 * gp.scale), (int)(7.67 * gp.scale),
-                (int)(7.67 * gp.scale));
+        x = (int)(gp.getMapConstrains()[0][0] * gp.getWidthTileSize());
+        y = (int)(gp.getMapConstrains()[0][1] * gp.getHeightTileSize());
+        setBounds(x, y, (int)(1.5 * gp.getWidthTileSize()), (int)(1.5 * gp.getHeightTileSize()));
         collision = false;
         ethereal = false;
         invisible = false;
-        if (animationThread == null) {
-            animationThread = createAnimationThread(30);
-            animationThread.start();
+        if (getAnimationThread() == null) {
+            setAnimationThread(createAnimationThread(30));
+            getAnimationThread().start();
         }
     }
 
@@ -88,8 +93,7 @@ public class Player extends Entity {
     protected Thread createAnimationThread(int delay) {
         return new Thread(() -> {
             while (animationRunning) {
-                if (gp.gameState == GameState.PLAY) {
-
+                if (gp.getGameState() == GameState.PLAY) {
                     if (spriteNum == 5) spriteNum = 0;
                     spriteNum++;
 
@@ -104,9 +108,9 @@ public class Player extends Entity {
                         currentImage = null;
                     }
                 }
-                else if (gp.gameState == GameState.DEAD){
+                else if (gp.getGameState() == GameState.DEAD){
                     try {
-                        if (gp.deathAnimState == gp.deathAnimGoes) {
+                        if (gp.getDeathAnimState() == gp.getDeathAnimGoes()) {
                             currentImage = idle1;
                             Thread.sleep(200);
                             currentImage = up1;
@@ -123,12 +127,13 @@ public class Player extends Entity {
                             Thread.sleep(200);
                             currentImage = null;
                             Thread.sleep(200);
-                            gp.deathAnimState = gp.deathAnimEnded;
+                            gp.setDeathAnimState(gp.getDeathAnimEnded());
                         }
                     } catch (InterruptedException e) {
                         //nothing
                     }
                 }
+
                 //delay
                 try {
                     Thread.sleep(delay);
@@ -177,66 +182,66 @@ public class Player extends Entity {
     @Override
     public void update() {
         //for going left-right right-left border
-        if (x + gp.tileSize <= 0){
-            x = gp.maxScreenColumn * gp.tileSize;
+        if (x + gp.getWidthTileSize() <= 0){
+            x = gp.getMaxScreenColumn() * gp.getWidthTileSize();
         }
-        else if (x >= gp.maxScreenColumn * gp.tileSize) {
+        else if (x >= gp.getMaxScreenColumn() * gp.getWidthTileSize()) {
             x = 0;
         }
 
-        if (directionChanged) {
-            animationThread.interrupt(); //to change player's direction animation instantly
-            directionChanged = false;
+        if (isDirectionChanged()) {
+            getAnimationThread().interrupt(); //to change player's direction animation instantly
+            setDirectionChanged(false);
         }
 
         //determining queued side
-        if (gp.keyHandler.upPressed) {
+        if (gp.getKeyHandler().isUpPressed()) {
             nextDirection = Direction.UP;
-            gp.keyHandler.upPressed = false;
+            gp.getKeyHandler().setUpPressed(false);
         }
-        else if (gp.keyHandler.downPressed) {
+        else if (gp.getKeyHandler().isDownPressed()) {
             nextDirection = Direction.DOWN;
-            gp.keyHandler.downPressed = false;
+            gp.getKeyHandler().setDownPressed(false);
         }
-        else if (gp.keyHandler.rightPressed) {
+        else if (gp.getKeyHandler().isRightPressed()) {
             nextDirection = Direction.RIGHT;
-            gp.keyHandler.rightPressed = false;
+            gp.getKeyHandler().setRightPressed(false);
         }
-        else if (gp.keyHandler.leftPressed) {
+        else if (gp.getKeyHandler().isLeftPressed()) {
             nextDirection = Direction.LEFT;
-            gp.keyHandler.leftPressed = false;
+            gp.getKeyHandler().setLeftPressed(false);
         }
 
         if (tileChanged() || direction == Direction.IDLE) {
             //checking would we be able to move if we change direction
-            gp.collisionChecker.checkIfCanMove(this, nextDirection);
+            gp.getCollisionChecker().checkIfCanMove(this, nextDirection);
             if (!collision && nextDirection != Direction.IDLE) {
                 direction = nextDirection;
                 nextDirection = Direction.IDLE;
-                directionChanged = true;
+                setDirectionChanged(true);
             }
             else collision = false; //if no, then keeping this direction in memory and keeping moving as we wanted
 
             //checking collision for current direction:
-            gp.collisionChecker.checkIfCanMove(this, direction);
+            gp.getCollisionChecker().checkIfCanMove(this, direction);
         }
 
         //checking objects
-        pickUpObject(gp.collisionChecker.checkEntities(this, gp.objects), gp.objects);
+        pickUpObject(gp.getCollisionChecker().checkEntities(this, gp.getObjects()), gp.getObjects());
 
         //checking boosters
-        pickUpObject(gp.collisionChecker.checkEntities(this, gp.boosters), gp.boosters);
+        pickUpObject(gp.getCollisionChecker().checkEntities(this, gp.getBoosters()), gp.getBoosters());
 
         //interacting with ghosts
-        interactWithGhost(gp.collisionChecker.checkEntities(this, gp.ghosts));
+        interactWithGhost(gp.getCollisionChecker().checkEntities(this, gp.getGhosts()));
 
         //changing coords according to the direction
         if (!collision) {
             switch (direction) {
-                case UP -> y -= speed;
-                case DOWN -> y += speed;
-                case RIGHT -> x += speed;
-                case LEFT -> x -= speed;
+                case UP -> y -= vspeed;
+                case DOWN -> y += vspeed;
+                case RIGHT -> x += hspeed;
+                case LEFT -> x -= hspeed;
             }
         }
         else direction = Direction.IDLE;
@@ -245,49 +250,55 @@ public class Player extends Entity {
     private void pickUpObject(int index, ArrayList<? extends Entity> passedObjects) {
         if (index != -1) {
             if (passedObjects.get(index) instanceof Point_obj) {
-                gp.score += 10;
+                gp.setScore(gp.getScore() + 10);
+                gp.getEatablesPanel().remove(passedObjects.get(index));
                 passedObjects.remove(index);
             }
             else if (passedObjects.get(index) instanceof Power_pellet_obj) {
-                gp.score += 50;
+                gp.setScore(gp.getScore() + 50);
+                gp.getEatablesPanel().remove(passedObjects.get(index));
                 passedObjects.remove(index);
-                if (gp.pelletEaten) {
-                    gp.behaviourThreadTask.frightenedCounter = gp.behaviourThreadTask.getFrightenedTiming();
+                if (gp.isPelletEaten()) {
+                    gp.getGhostsBehaviourThreadTask().setFrightenedCounter(gp.getGhostsBehaviourThreadTask().getFrightenedTiming());
                 }
-                else gp.pelletEaten = true;
+                else gp.setPelletEaten(true);
 
-                gp.ghostBehaviour.interrupt(); //in order to get them to frightened state instantly
+                gp.getGhostBehaviour().interrupt(); //in order to get them to frightened state instantly
             }
             else if (passedObjects.get(index) instanceof Booster) {
-                gp.score += 50;
-                ((Booster) passedObjects.get(index)).consumed = true;
-                ((Booster) passedObjects.get(index)).timeCounter = 0;
+                gp.setScore(gp.getScore() + 50);
+                ((Booster) passedObjects.get(index)).setConsumed(true);
+                ((Booster) passedObjects.get(index)).setTimeCounter(0);
                 if (passedObjects.get(index) instanceof Speed_booster_obj) {
-                    passedObjects.get(index).x = 8 * gp.tileSize;
+                    passedObjects.get(index).x = 8 * gp.getWidthTileSize();
                     passedObjects.get(index).y = 1;
-                    speed += 2;
+                    hspeed += (int)(0.67 * gp.getWidthScale());
+                    vspeed += (int)(0.67 * gp.getHeightScale());
                 }
                 else if (passedObjects.get(index) instanceof Heart_booster_obj) {
+                    gp.getEatablesPanel().remove(passedObjects.get(index));
                     passedObjects.remove(index);
                     lives++;
+                    gp.getUi().addHealth();
                 }
                 else if (passedObjects.get(index) instanceof Wall_piercer_booster_obj) {
-                    passedObjects.get(index).x = 10 * gp.tileSize;
+                    passedObjects.get(index).x = 10 * gp.getWidthTileSize();
                     passedObjects.get(index).y = 1;
                     ethereal = true;
                 }
                 else if (passedObjects.get(index) instanceof Invisibility_booster_obj) {
-                    passedObjects.get(index).x = 10 * gp.tileSize;
+                    passedObjects.get(index).x = 10 * gp.getWidthTileSize();
                     passedObjects.get(index).y = 1;
                     invisible = true;
                 }
                 else if (passedObjects.get(index) instanceof Ghosts_freezer_obj) {
+                    gp.getEatablesPanel().remove(passedObjects.get(index));
                     passedObjects.remove(index);
-                    if (gp.freezerEaten) {
-                        gp.behaviourThreadTask.ghostFreezerTimer = gp.behaviourThreadTask.getFrozenTiming();
+                    if (gp.isFreezerEaten()) {
+                        gp.getGhostsBehaviourThreadTask().setGhostFreezerTimer(gp.getGhostsBehaviourThreadTask().getFrozenTiming());
                     }
-                    else gp.freezerEaten = true;
-                    gp.ghostBehaviour.interrupt(); //in order to get them to frozen state instantly
+                    else gp.setFreezerEaten(true);
+                    gp.getGhostBehaviour().interrupt(); //in order to get them to frozen state instantly
                 }
             }
         }
@@ -295,33 +306,61 @@ public class Player extends Entity {
 
     private void interactWithGhost(int index) {
         if (index != -1) {
-            if (gp.pelletEaten && !gp.ghosts.get(index).eaten) {
+            if (gp.isPelletEaten() && !gp.getGhosts().get(index).isEaten()) {
                 eatenGhosts++;
-                gp.ghosts.get(index).frozen = false;
-                gp.ghosts.get(index).eaten = true;
-                gp.ghosts.get(index).speed = 8;
-                gp.ghosts.get(index).animationThread.interrupt(); //to make ghost's appearance eaten instantly
-                gp.ghosts.get(index).state = GhostState.EATEN;
+                gp.getGhosts().get(index).setFrozen(false);
+                gp.getGhosts().get(index).setEaten(true);
+                gp.getGhosts().get(index).hspeed = (int)(2.67 * gp.getWidthScale());
+                gp.getGhosts().get(index).vspeed = (int)(2.67 * gp.getHeightScale());
+                gp.getGhosts().get(index).getAnimationThread().interrupt(); //to make ghost's appearance eaten instantly
+                gp.getGhosts().get(index).state = GhostState.EATEN;
 
                 //counting points for eaten ghosts and awarding player
                 int awardedPoints = (int)Math.pow(2, eatenGhosts) * 100;
-                gp.score += awardedPoints;
+                gp.setScore(gp.getScore() + awardedPoints);
                 //displaying these points(by adding them into messagesFlow in UI class)
-                gp.ui.messagesFlow.add(awardedPoints);
-                gp.ui.messagesFlow.add(x);
-                gp.ui.messagesFlow.add(y);
+                JLabel ghostDeadMessage = new JLabel(String.valueOf(awardedPoints));
+                ghostDeadMessage.setBounds(x, y, gp.getWidthTileSize() * 2, gp.getHeightTileSize());
+                gp.getUi().getMessagesFlow().add(ghostDeadMessage);
+                gp.getUiPanel().add(ghostDeadMessage);
                 //setting the counter for this message
-                gp.ui.messagesCounter.add(60); // for 60 updates -- exactly one second
+                gp.getUi().getMessagesCounter().add(60); // for 60 updates -- exactly one second
             }
-            else if (!gp.ghosts.get(index).eaten) {
-                gp.gameState = GameState.DEAD;
+            else if (!gp.getGhosts().get(index).isEaten()) {
+                gp.setGameState(GameState.DEAD);
                 lives--;
+                gp.getUi().deductHealth();
             }
         }
     }
 
     @Override
-    public void draw(Graphics2D g2) {
-        super.draw(g2);
+    public void resize() {
+        super.resize();
+        setBounds(x, y, (int)(1.5 * gp.getWidthTileSize()), (int)(1.5 * gp.getHeightTileSize()));
+    }
+
+    //GETTERS & SETTERS
+    //getters
+    public int getLives() {
+        return lives;
+    }
+    public boolean isEthereal() {
+        return ethereal;
+    }
+    public boolean isInvisible() {
+        return invisible;
+    }
+
+    //------------------------------
+    //setters
+    public void setEatenGhosts(int eatenGhosts) {
+        this.eatenGhosts = eatenGhosts;
+    }
+    public void setEthereal(boolean ethereal) {
+        this.ethereal = ethereal;
+    }
+    public void setInvisible(boolean invisible) {
+        this.invisible = invisible;
     }
 }

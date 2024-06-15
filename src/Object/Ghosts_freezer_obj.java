@@ -1,5 +1,4 @@
 package Object;
-
 import Main.GamePanel;
 
 public class Ghosts_freezer_obj extends Booster {

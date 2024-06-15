@@ -19,11 +19,13 @@ public class Heart_booster_obj extends Booster {
                 else if (spriteNum == 2) currentImage = up2;
                 else if (spriteNum == 3) currentImage = up3;
 
+
+
                 //delay
                 try {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
-
+                    //nothing
                 }
             }
         });

@@ -1,9 +1,5 @@
 package Object;
-import Entity.Entity;
 import Main.GamePanel;
-import Main.GameState;
-
-import java.awt.*;
 
 public class Power_pellet_obj extends Booster {
     public Power_pellet_obj(GamePanel gp, int x, int y) {

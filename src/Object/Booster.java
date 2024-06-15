@@ -2,16 +2,17 @@ package Object;
 import Entity.Entity;
 import Main.Direction;
 import Main.GamePanel;
-import com.sun.security.jgss.GSSUtil;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Random;
 
 public abstract class Booster extends Entity {
-    public int timeCounter = 0;
-    public boolean consumed = false;
-    public int limit;
+    private int timeCounter = 0;
+    private boolean consumed = false;
+    protected int limit;
 
     public Booster(GamePanel gp, int x, int y)
     {
@@ -19,17 +20,22 @@ public abstract class Booster extends Entity {
         this.x = x;
         this.y = y;
         setDefaultValues();
+        gp.getEatablesPanel().add(this);
     }
 
     @Override
     public void setDefaultValues() {
         loadImages();
-        setCollisionAreaRectangle(0, 0, 8 * gp.scale, 8 * gp.scale);
+        baseSpeed = 1;
+        recalculateSpeed();
+        baseCollisionStart = 0;
+        baseCollisionEnd = 8;
+        setCollisionAreaRectangle();
+        setBounds(x, y, gp.getWidthTileSize(), gp.getHeightTileSize());
         direction = Direction.values()[new Random().nextInt(Direction.values().length - 1)];
-        speed = 3;
         limit = 420;
-        animationThread = createAnimationThread(120);
-        animationThread.start();
+        setAnimationThread(createAnimationThread(120));
+        getAnimationThread().start();
     }
 
     @Override
@@ -42,11 +48,13 @@ public abstract class Booster extends Entity {
                 if (spriteNum == 1) currentImage = idle1;
                 else if (spriteNum == 2) currentImage = idle2;
 
+
+
                 //delay
                 try {
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
-
+                    //just to restart thread
                 }
             }
         });
@@ -56,16 +64,16 @@ public abstract class Booster extends Entity {
     public void update() {
         if (!consumed) {
             //for going left-right right-left border
-            if (x + gp.tileSize <= 0) {
-                x = gp.maxScreenColumn * gp.tileSize;
+            if (x + gp.getWidthTileSize() <= 0) {
+                x = gp.getMaxScreenColumn() * gp.getWidthTileSize();
             }
-            else if (x >= gp.maxScreenColumn * gp.tileSize) {
+            else if (x >= gp.getMaxScreenColumn() * gp.getWidthTileSize()) {
                 x = 0;
             }
 
             if (tileChanged()) {
                 //checking collision for current direction:
-                gp.collisionChecker.checkIfCanMove(this, direction);
+                gp.getCollisionChecker().checkIfCanMove(this, direction);
 
                 if (collision) {
                     collision = false;
@@ -79,10 +87,10 @@ public abstract class Booster extends Entity {
             }
 
             switch (direction) {
-                case UP -> y -= speed;
-                case DOWN -> y += speed;
-                case RIGHT -> x += speed;
-                case LEFT -> x -= speed;
+                case UP -> y -= vspeed;
+                case DOWN -> y += vspeed;
+                case RIGHT -> x += hspeed;
+                case LEFT -> x -= hspeed;
             }
         }
         timeCounter++;
@@ -92,7 +100,7 @@ public abstract class Booster extends Entity {
         ArrayList<Direction> possibleDirections = new ArrayList<>();
         for (Direction checkedDirection : Direction.values()) {
             if (checkedDirection != Direction.IDLE) {
-                gp.collisionChecker.checkIfCanMove(this, checkedDirection);
+                gp.getCollisionChecker().checkIfCanMove(this, checkedDirection);
                 if (!collision) {
                     possibleDirections.add(checkedDirection);
                 }
@@ -102,18 +110,44 @@ public abstract class Booster extends Entity {
         return possibleDirections;
     }
 
-    @Override
-    public void draw(Graphics2D g2) {
-        g2.drawImage(currentImage, x, y, gp.tileSize, gp.tileSize, null);
+    public void redraw() {
+        if (currentImage == null) setIcon(null);
+        else setIcon(getScaledIcon(currentImage));
+        setLocation(x, y);
+    }
 
-        //DEBUG
-        if (gp.keyHandler.debugPressed) {
-            g2.setColor(Color.PINK);
-            collisionAreaRectangle.x += x;
-            collisionAreaRectangle.y += y;
-            g2.draw(collisionAreaRectangle);
-            collisionAreaRectangle.x = collisionAreaDefaultX;
-            collisionAreaRectangle.y = collisionAreaDefaultY;
-        }
+    @Override
+    public void resize() {
+        super.resize();
+        setBounds(x, y, gp.getWidthTileSize(), gp.getHeightTileSize());
+    }
+
+    @Override
+    protected ImageIcon getScaledIcon(BufferedImage image) {
+        Image scaledImage = image.getScaledInstance(gp.getWidthTileSize(), gp.getHeightTileSize(), Image.SCALE_SMOOTH);
+
+        return new ImageIcon(scaledImage);
+    }
+
+    //GETTERS & SETTERS
+
+    //getters
+    public int getTimeCounter() {
+        return timeCounter;
+    }
+    public boolean isConsumed() {
+        return consumed;
+    }
+    public int getLimit() {
+        return limit;
+    }
+
+    //------------------------------------------
+    //setters
+    public void setTimeCounter(int timeCounter) {
+        this.timeCounter = timeCounter;
+    }
+    public void setConsumed(boolean consumed) {
+        this.consumed = consumed;
     }
 }

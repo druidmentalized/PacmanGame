@@ -12,65 +12,70 @@ import java.util.Random;
 import static Entity.GhostState.*;
 
 public abstract class Ghost extends Entity {
-    protected int[] scatterCoords;
-    protected static int[] eatenCoords;
-    protected static int[] outOfCageCoords;
-    protected int[] xy;
+    protected Point scatterCoords;
+    protected static Point eatenCoords;
+    protected static Point outOfCageCoords;
+    protected Point xy;
     protected GhostState state;
-    public boolean eaten = false;
-    public boolean goingOutOfCage = false;
-    public boolean wasEatenDuringPellet = false; //variable responsible for not frightening again after being eaten
+    private  boolean eaten = false;
+    private  boolean goingOutOfCage = false;
+    private boolean wasEatenDuringPellet = false; //variable responsible for not frightening again after being eaten
     protected BufferedImage frightened1, frightened2, frightenedSoonEnd1, frightenedSoonEnd2, eatenUp, eatenDown,
             eatenRight, eatenLeft, frozenIdle1, frozenIdle2, frozenFrightened1, frozenFrightened2,
             frozenFrightenedSoonEnd1, frozenFrightenedSoonEnd2;
 
-    public boolean canDropBoosters = false;
-    public boolean frozen = false;
+    private  boolean canDropBoosters = false;
+    private  boolean frozen = false;
 
     public Ghost(GamePanel gp) {
         super(gp);
         loadImages();
         setDefaultValues();
+        gp.getCharactersPanel().add(this);
     }
 
     @Override
     public void setDefaultValues() {
         switch (this) {
             case Blinky blinky -> {
-                x = (int) (gp.getMapConstrains()[1][0] * gp.tileSize);
-                y = (int) (gp.getMapConstrains()[1][1] * gp.tileSize);
+                x = (int) (gp.getMapConstrains()[1][0] * gp.getWidthTileSize());
+                y = (int) (gp.getMapConstrains()[1][1] * gp.getHeightTileSize());
                 canDropBoosters = true; //made because he's not in the cage from the very beginning -> can drop them
 
-                scatterCoords = new int[]{(gp.maxScreenColumn - 3) * gp.tileSize, 0};
+                scatterCoords = new Point((gp.getMaxScreenColumn() - 3) * gp.getWidthTileSize(), 0);
+                outOfCageCoords = new Point(eatenCoords.x, (eatenCoords.y - 3 * gp.getHeightTileSize()));
             }
             case Pinky pinky -> {
-                x = (int) (gp.getMapConstrains()[2][0] * gp.tileSize);
-                y = (int) (gp.getMapConstrains()[2][1] * gp.tileSize);
-                scatterCoords = new int[]{3 * gp.tileSize, 0};
+                x = (int) (gp.getMapConstrains()[2][0] * gp.getWidthTileSize());
+                y = (int) (gp.getMapConstrains()[2][1] * gp.getHeightTileSize());
+                scatterCoords = new Point(3 * gp.getHeightTileSize(), 0);
             }
             case Inky inky -> {
-                x = (int) (gp.getMapConstrains()[3][0] * gp.tileSize);
-                y = (int) (gp.getMapConstrains()[3][1] * gp.tileSize);
-                scatterCoords = new int[]{(gp.maxScreenColumn - 1) * gp.tileSize, (gp.maxScreenRow - 1) * gp.tileSize};
+                x = (int) (gp.getMapConstrains()[3][0] * gp.getWidthTileSize());
+                y = (int) (gp.getMapConstrains()[3][1] * gp.getHeightTileSize());
+                scatterCoords = new Point(((gp.getMaxScreenColumn() - 1) * gp.getWidthTileSize()), ((gp.getMaxScreenColumn() - 1) * gp.getHeightTileSize()));
             }
             case Clyde clyde -> {
-                x = (int) (gp.getMapConstrains()[4][0] * gp.tileSize);
-                y = (int) (gp.getMapConstrains()[4][1] * gp.tileSize);
-                scatterCoords = new int[]{0, (gp.maxScreenRow - 1) * gp.tileSize};
+                x = (int) (gp.getMapConstrains()[4][0] * gp.getWidthTileSize());
+                y = (int) (gp.getMapConstrains()[4][1] * gp.getHeightTileSize());
+                scatterCoords = new Point(0, ((gp.getMaxScreenColumn() - 1) * gp.getHeightTileSize()));
             }
             default -> {
                 x = 0;
                 y = 0;
-                scatterCoords = new int[]{0, 0,};
+                scatterCoords = new Point(0, 0);
             }
         }
-        setCollisionAreaRectangle((int)(2.34 * gp.scale), (int)(2.34 * gp.scale), (int)(7.67 * gp.scale),
-                (int)(7.67 * gp.scale));
-        speed = 3;
-        prevColumn = x / gp.tileSize;
-        prevRow = y / gp.tileSize;
-        animationThread = createAnimationThread(200);
-        animationThread.start();
+        setBounds(x, y, (int)(1.5 * gp.getWidthTileSize()), (int)(1.5 * gp.getHeightTileSize()));
+        baseSpeed = 1;
+        recalculateSpeed();
+        baseCollisionStart = 2.34;
+        baseCollisionEnd = 7.67;
+        setCollisionAreaRectangle();
+        prevColumn = x / gp.getWidthTileSize();
+        prevRow = y / gp.getHeightTileSize();
+        setAnimationThread(createAnimationThread(200));
+        getAnimationThread().start();
     }
 
     @Override
@@ -95,7 +100,7 @@ public abstract class Ghost extends Entity {
             boolean blinkingWhite = false;
 
             while (animationRunning) {
-                if (gp.gameState == GameState.PLAY) {
+                if (gp.getGameState() == GameState.PLAY) {
                     if (spriteNum == 2) spriteNum = 0;
                     spriteNum++;
                     if (state == CHASE || state == SCATTER) {
@@ -130,7 +135,7 @@ public abstract class Ghost extends Entity {
                         }
                     }
                     else if (state == FRIGHTENED) {
-                        if (gp.behaviourThreadTask.frightenedCounter < 2) {
+                        if (gp.getGhostsBehaviourThreadTask().getFrightenedCounter() < 2) {
                             //ghosts start blinking when frightened time comes to an end
                             if (spriteNum == 1 && blinkingWhite) {
                                 currentImage = !frozen ? frightenedSoonEnd1 : frozenFrightenedSoonEnd1;
@@ -161,6 +166,8 @@ public abstract class Ghost extends Entity {
                         }
                     }
                 }
+
+
                 //delay
                 try {
                     Thread.sleep(delay);
@@ -171,29 +178,29 @@ public abstract class Ghost extends Entity {
         });
     }
 
-    protected abstract int[] findInChaseMode();
+    protected abstract Point findInChaseMode();
 
-    protected int[] findTarget() {
+    protected Point findTarget() {
         if (goingOutOfCage) {
             return outOfCageCoords;
         }
         else if (state == EATEN) return eatenCoords;
-        else if (state == FRIGHTENED || gp.player.invisible) {
+        else if (state == FRIGHTENED || gp.getPlayer().isInvisible()) {
             switch (new Random().nextInt(4)) {
                 case 0 -> {
-                    return new int[]{(currentColumn) * gp.tileSize, (currentRow - 1) * gp.tileSize}; //up
+                    return new Point(currentColumn * gp.getWidthTileSize(), (currentRow - 1) * gp.getHeightTileSize()); //up
                 }
                 case 1 -> {
-                    return new int[]{(currentColumn - 1) * gp.tileSize, (currentRow) * gp.tileSize}; //left
+                    return new Point((currentColumn - 1) * gp.getWidthTileSize(), (currentRow) * gp.getHeightTileSize()); //left
                 }
                 case 2 -> {
-                    return new int[]{(currentColumn) * gp.tileSize, (currentRow + 1) * gp.tileSize}; //down
+                    return new Point ((currentColumn * gp.getWidthTileSize()), (currentRow + 1) * gp.getHeightTileSize()); //down
                 }
                 case 3 -> {
-                    return new int[]{(currentColumn + 1) * gp.tileSize, (currentRow) * gp.tileSize}; //right
+                    return new Point((currentColumn + 1) * gp.getWidthTileSize(), currentRow * gp.getHeightTileSize()); //right
                 }
                 default -> {
-                    return new int[0];
+                    return new Point(0, 0);
                 }
             }
         }
@@ -201,29 +208,27 @@ public abstract class Ghost extends Entity {
         else return findInChaseMode();
     }
 
-    protected void determineNextDirection(int targetX, int targetY) {
+    protected void determineNextDirection(double targetX, double targetY) {
         //making all possible vectors to the target location and finding shortest of them
         //Possible are: not the previous direction + those, which do not meet collision
-        HashMap<Direction, Integer> vectors = new HashMap<>();
+        HashMap<Direction, Double> vectors = new HashMap<>();
         Direction shortestVectorDirection = null;
         for (Direction checkedDirection : Arrays.copyOfRange(Direction.values(), 0,
                 Direction.values().length - 1)) {
             if (Math.abs(direction.ordinal() - checkedDirection.ordinal()) != 2) {
                 //gp.collisionChecker.checkIfCanMove(this, checkedDirection);
-                gp.collisionChecker.checkIfCanMove(this, checkedDirection);
+                gp.getCollisionChecker().checkIfCanMove(this, checkedDirection);
                 if (!collision) {
                     switch (checkedDirection) {
                         case UP -> {
-                            if (!((currentColumn == 9 || currentColumn == 12) && (currentRow == 14 || currentRow == 26)))
-                                vectors.put(checkedDirection, calculateVectorDistance(x, y - gp.tileSize,
-                                        targetX, targetY));
-                            else vectors.put(checkedDirection, 99999);
+                            vectors.put(checkedDirection, calculateVectorDistance(x, y - gp.getHeightTileSize(),
+                                    targetX, targetY));
                         }
-                        case LEFT -> vectors.put(checkedDirection, calculateVectorDistance(x - gp.tileSize, y,
+                        case LEFT -> vectors.put(checkedDirection, calculateVectorDistance(x - gp.getWidthTileSize(), y,
                                 targetX, targetY));
-                        case DOWN -> vectors.put(checkedDirection, calculateVectorDistance(x, y + gp.tileSize,
+                        case DOWN -> vectors.put(checkedDirection, calculateVectorDistance(x, y + gp.getHeightTileSize(),
                                 targetX, targetY));
-                        case RIGHT -> vectors.put(checkedDirection, calculateVectorDistance(x + gp.tileSize, y,
+                        case RIGHT -> vectors.put(checkedDirection, calculateVectorDistance(x + gp.getWidthTileSize(), y,
                                 targetX, targetY));
                     }
                     if (shortestVectorDirection == null) shortestVectorDirection = checkedDirection;
@@ -237,52 +242,95 @@ public abstract class Ghost extends Entity {
 
     }
 
-    protected int calculateVectorDistance(int x1, int y1, int x2, int y2) {
-        return (int)Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+    protected double calculateVectorDistance(double x1, double y1, double x2, double y2) {
+        return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
 
     @Override
     public void update() {
         //for going left-right right-left border
-        if (x + gp.tileSize <= 0) {
-            x = gp.maxScreenColumn * gp.tileSize;
+        if (x + gp.getWidthTileSize() <= 0) {
+            x = gp.getMaxScreenColumn() * gp.getWidthTileSize();
         }
-        else if (x >= gp.maxScreenColumn * gp.tileSize) {
+        else if (x >= gp.getMaxScreenColumn() * gp.getWidthTileSize()) {
             x = 0;
         }
 
         if (tileChanged()) {
             //to get back to normal states after being eaten
-            if (eaten && currentColumn * gp.tileSize == eatenCoords[0] && currentRow * gp.tileSize == eatenCoords[1]) {
+            if (eaten && currentColumn * gp.getWidthTileSize() == eatenCoords.x && currentRow * gp.getHeightTileSize() == eatenCoords.y) {
                 eaten = false;
                 wasEatenDuringPellet = true;
                 goingOutOfCage = true;
-                speed = 3;
+                recalculateSpeed();
             }
-            else if (goingOutOfCage && (currentColumn == outOfCageCoords[0] / gp.tileSize
-                    || currentColumn == outOfCageCoords[0] / gp.tileSize - 1) &&
-                    (currentRow == outOfCageCoords[1] / gp.tileSize)) {
+            else if (goingOutOfCage && (currentColumn == outOfCageCoords.x / gp.getWidthTileSize()
+                    || currentColumn == outOfCageCoords.x / gp.getWidthTileSize() - 1) &&
+                    (currentRow == outOfCageCoords.y / gp.getHeightTileSize())) {
                 goingOutOfCage = false;
                 canDropBoosters = true;
             }
             xy = findTarget();
-            determineNextDirection(xy[0], xy[1]);
-            animationThread.interrupt(); //to change ghost's direction animation instantly
+            determineNextDirection(xy.x, xy.y);
+            getAnimationThread().interrupt(); //to change ghost's direction animation instantly
         }
 
         //since we know that we can move to the new direction, then
         if (!frozen) {
             switch(direction) {
-                case Direction.UP -> y -= speed;
-                case Direction.DOWN -> y += speed;
-                case Direction.RIGHT -> x += speed;
-                case Direction.LEFT -> x -= speed;
+                case Direction.UP -> y -= vspeed;
+                case Direction.DOWN -> y += vspeed;
+                case Direction.RIGHT -> x += hspeed;
+                case Direction.LEFT -> x -= hspeed;
             }
         }
     }
+    @Override
+    public void resize() {
+        super.resize();
+        setBounds(x, y, (int)(1.5 * gp.getWidthTileSize()), (int)(1.5 * gp.getHeightTileSize()));
+        scatterCoords = new Point((int)(scatterCoords.x * gp.getWidthRatio()), (int)(scatterCoords.y * gp.getHeightRatio()));
+        if (this instanceof Blinky) {
+            eatenCoords = new Point((int)(eatenCoords.x * gp.getWidthRatio()), (int)(eatenCoords.y * gp.getHeightRatio()));
+            outOfCageCoords = new Point((int)(outOfCageCoords.x * gp.getWidthRatio()), (int)(outOfCageCoords.y * gp.getHeightRatio()));
+        }
+    }
 
-    public static void setEatenCoords(int[] eatenXY) {
-        eatenCoords = eatenXY;
-        outOfCageCoords = new int[]{eatenCoords[0], eatenCoords[1] - 3 * 24};
+    //GETTERS & SETTERS
+
+    //getters
+    public boolean isEaten() {
+        return eaten;
+    }
+    public boolean isGoingOutOfCage() {
+        return goingOutOfCage;
+    }
+    public boolean isWasEatenDuringPellet() {
+        return wasEatenDuringPellet;
+    }
+    public boolean isCanDropBoosters() {
+        return canDropBoosters;
+    }
+
+    //-----------------------------------------------
+
+    //setters
+    public static void setEatenCoords(Point eatenCoords) {
+        Ghost.eatenCoords = eatenCoords;
+    }
+    public void setGoingOutOfCage(boolean goingOutOfCage) {
+        this.goingOutOfCage = goingOutOfCage;
+    }
+    public void setWasEatenDuringPellet(boolean wasEatenDuringPellet) {
+        this.wasEatenDuringPellet = wasEatenDuringPellet;
+    }
+    public void setCanDropBoosters(boolean canDropBoosters) {
+        this.canDropBoosters = canDropBoosters;
+    }
+    public void setFrozen(boolean frozen) {
+        this.frozen = frozen;
+    }
+    public void setEaten(boolean eaten) {
+        this.eaten = eaten;
     }
 }

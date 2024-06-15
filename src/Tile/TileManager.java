@@ -3,30 +3,35 @@ package Tile;
 
 import Main.GamePanel;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.HashMap;
 import Main.GameState;
+import Main.Redrawable;
+import Main.Resizable;
 import Object.Point_obj;
 import Object.Power_pellet_obj;
 
-public class TileManager {
+import javax.swing.*;
+
+public class TileManager implements Resizable, Redrawable {
     GamePanel gp;
-    public Tile[][] tiles;
-    public int textureChangeCounter = 0;
+    private Tile[][] tiles;
+    private int textureChangeCounter = 0;
     private final HashMap<String, String> mapNamesToPaths = new HashMap<>() {{
        put("Wide", "/maps/wide_map.txt");
        put("Small", "/maps/small_map.txt");
        put("Humanlike", "/maps/humanlike_map.txt");
        put("Original", "/maps/original_map.txt");
+       put("Squared", "/maps/squared_map.txt");
     }};
 
     public TileManager(GamePanel gp) {
         this.gp = gp;
     }
 
-    public void loadMap(String mapName) {
+    public void loadMap(String mapName, JPanel mapPanel) {
         //choosing color
         Random random = new Random();
         String mapColor;
@@ -40,9 +45,13 @@ public class TileManager {
             default -> mapColor = "white";
         }
 
-        //mapColor = "white";
-
         try {
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.weighty = 1.0;
+            gbc.weightx = 1.0;
+            gbc.insets = new Insets(0, 0, 0, 0);
+
             //reading map from file
             InputStream inputStream = getClass().getResourceAsStream(mapNamesToPaths.get(mapName));
             assert inputStream != null;
@@ -52,7 +61,8 @@ public class TileManager {
             String[] mapLineInNumbers = bufferedReader.readLine().split(" ");
             int rows = Integer.parseInt(mapLineInNumbers[0]);
             int columns = Integer.parseInt(mapLineInNumbers[1]);
-            gp.setPreferredSize(new Dimension(rows, columns));
+            mapPanel.setPreferredSize(new Dimension(columns * gp.getWidthTileSize(), rows * gp.getHeightTileSize()));
+            mapPanel.setBounds(0, 0, columns * gp.getWidthTileSize(), rows * gp.getHeightTileSize());
             gp.setMaxScreenColumn(columns);
             gp.setMaxScreenRow(rows);
             tiles = new Tile[rows][columns];
@@ -74,15 +84,18 @@ public class TileManager {
                 for (int column = 0; column < columns; column++) {
                     number = Integer.parseInt(mapLineInNumbers[column]);
                     tiles[row][column] = new Tile(number, mapColor, gp);
-                    tiles[row][column].collisionAreaRectangle = new Rectangle(column * gp.tileSize, row * gp.tileSize, 8 * gp.scale, 8 * gp.scale);
+                    //tiles[row][column].collisionAreaRectangle = new Rectangle.Double(column * gp.widthTileSize, row * gp.heightTileSize, 8 * gp.widthScale, 8 * gp.heightScale);
+                    gbc.gridx = column;
+                    gbc.gridy = row;
+                    mapPanel.add(tiles[row][column], gbc);
 
                     //filling map with points
                     if (number == 11) {
-                        gp.objects.add(new Point_obj(gp, column * gp.tileSize, row * gp.tileSize));
+                        gp.getObjects().add(new Point_obj(gp, column * gp.getWidthTileSize(), row * gp.getHeightTileSize()));
                     }
                     //filling map with power pellets
                     if (number == 12) {
-                        gp.objects.add(new Power_pellet_obj(gp, column * gp.tileSize, row * gp.tileSize));
+                        gp.getObjects().add(new Power_pellet_obj(gp, column * gp.getWidthTileSize(), row * gp.getHeightTileSize()));
                     }
                 }
             }
@@ -91,33 +104,59 @@ public class TileManager {
         }
     }
 
+    
 
-    public void draw(Graphics2D g2) {
-        int worldRow, worldColumn;
-        int worldX, worldY;
-        for (worldRow = 0; worldRow < tiles.length; worldRow++) {
-            for (worldColumn = 0; worldColumn < tiles[worldRow].length; worldColumn++) {
-                worldX = worldColumn * gp.tileSize;
-                worldY = worldRow * gp.tileSize;
-                if (gp.gameState == GameState.LEVELCHANGE) {
-                    if ((textureChangeCounter / 15) % 2 == 1) {
-                        g2.drawImage(tiles[worldRow][worldColumn].getImage(), worldX, worldY, gp.tileSize, gp.tileSize, null);
-                    }
-                    else if ((textureChangeCounter / 15) % 2 == 0) {
-                        g2.drawImage(tiles[worldRow][worldColumn].getWhiteImage(), worldX, worldY, gp.tileSize, gp.tileSize, null);
-                    }
-                } //4 changes
-                else g2.drawImage(tiles[worldRow][worldColumn].getImage(), worldX, worldY, gp.tileSize, gp.tileSize, null);
-
-                //DEBUG
-                if (gp.keyHandler.debugPressed) {
-                    g2.setColor(Color.DARK_GRAY);
-                    g2.draw(tiles[worldRow][worldColumn].collisionAreaRectangle);
-                }
+    public void redraw() {
+        for (int row = 0; row < gp.getMaxScreenRow(); row++) {
+            for (int column = 0; column < gp.getMaxScreenColumn(); column++) {
+                if ((textureChangeCounter / 15) % 2 == 1) tiles[row][column].setIcon(tiles[row][column].getScaledIcon(tiles[row][column].getImage()));
+                else if ((textureChangeCounter / 15) % 2 == 0) tiles[row][column].setIcon(tiles[row][column].getScaledIcon(tiles[row][column].getWhiteImage()));
             }
         }
-        if (gp.gameState == GameState.LEVELCHANGE) {
-            textureChangeCounter++;
+        textureChangeCounter++;
+    }
+
+    @Override
+    public void resize() {
+        for (int row = 0; row < gp.getMaxScreenRow(); row++) {
+            for (int column = 0; column < gp.getMaxScreenColumn(); column++) {
+                tiles[row][column].setIcon(tiles[row][column].getScaledIcon(tiles[row][column].getImage()));
+            }
         }
+    }
+
+    //GETTERS & SETTERS
+
+    //getters
+
+    public GamePanel getGp() {
+        return gp;
+    }
+
+    public Tile[][] getTiles() {
+        return tiles;
+    }
+
+    public int getTextureChangeCounter() {
+        return textureChangeCounter;
+    }
+
+    public HashMap<String, String> getMapNamesToPaths() {
+        return mapNamesToPaths;
+    }
+
+
+    //setters
+
+    public void setGp(GamePanel gp) {
+        this.gp = gp;
+    }
+
+    public void setTiles(Tile[][] tiles) {
+        this.tiles = tiles;
+    }
+
+    public void setTextureChangeCounter(int textureChangeCounter) {
+        this.textureChangeCounter = textureChangeCounter;
     }
 }

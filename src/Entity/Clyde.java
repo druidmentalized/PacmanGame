@@ -32,13 +32,13 @@ public class Clyde extends Ghost {
     }
 
     @Override
-    protected int[] findInChaseMode() {
-        int scareDistance = gp.tileSize * 8;
-        if (calculateVectorDistance(x, y, gp.player.x, gp.player.y) <= scareDistance) {
+    protected Point findInChaseMode() {
+        int scareDistance = gp.getWidthTileSize() * 8;
+        if (calculateVectorDistance(x, y, gp.getPlayer().x, gp.getPlayer().y) <= scareDistance) {
             return scatterCoords;
         }
         else {
-            return new int[]{gp.player.x, gp.player.y};
+            return new Point(gp.getPlayer().x, gp.getPlayer().y);
         }
     }
 }

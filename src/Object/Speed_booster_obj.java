@@ -1,8 +1,5 @@
 package Object;
-import Main.Direction;
 import Main.GamePanel;
-import java.util.ArrayList;
-import java.util.Random;
 
 public class Speed_booster_obj extends Booster {
 

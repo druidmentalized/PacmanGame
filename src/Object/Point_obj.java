@@ -1,8 +1,5 @@
 package Object;
-import Entity.Entity;
 import Main.GamePanel;
-
-import java.awt.*;
 
 public class Point_obj extends Booster {
 
@@ -12,7 +9,10 @@ public class Point_obj extends Booster {
 
     public void setDefaultValues() {
         loadImages();
-        setCollisionAreaRectangle(3 * gp.scale, 3 * gp.scale, 2 * gp.scale, 2 * gp.scale);
+        setBounds(x, y, gp.getWidthTileSize(), gp.getHeightTileSize());
+        baseCollisionStart = 3;
+        baseCollisionEnd = 2;
+        setCollisionAreaRectangle();
     }
 
     @Override
@@ -29,20 +29,5 @@ public class Point_obj extends Booster {
     @Override
     public void update() {
         //doesn't update
-    }
-
-    @Override
-    public void draw(Graphics2D g2) {
-        g2.drawImage(currentImage, x, y, gp.tileSize, gp.tileSize, null);
-
-        //debug
-        if (gp.keyHandler.debugPressed) {
-            g2.setColor(Color.PINK);
-            collisionAreaRectangle.x += x;
-            collisionAreaRectangle.y += y;
-            g2.draw(collisionAreaRectangle);
-            collisionAreaRectangle.x = collisionAreaDefaultX;
-            collisionAreaRectangle.y = collisionAreaDefaultY;
-        }
     }
 }

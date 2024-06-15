@@ -8,7 +8,7 @@ import Entity.Player;
 
 
 public class CollisionChecker {
-    GamePanel gp;
+    private final GamePanel gp;
     private final ArrayList<Integer> neverPassableTileNums = new ArrayList<>(Arrays.asList(17, 18, 19, 20, 29, 30, 31, 32, 39));
 
     public CollisionChecker(GamePanel gp) {
@@ -16,16 +16,16 @@ public class CollisionChecker {
     }
 
     public void checkIfCanMove(Entity entity, Direction direction) {
-        int entityCollisionX = entity.direction == Direction.RIGHT ? entity.x + entity.collisionAreaRectangle.x :
-                entity.x + entity.collisionAreaRectangle.x + entity.collisionAreaRectangle.width - entity.speed;
-        int entityCollisionY = entity.direction == Direction.DOWN ? entity.y + entity.collisionAreaRectangle.y :
-                entity.y + entity.collisionAreaRectangle.y + entity.collisionAreaRectangle.height - entity.speed;
+        double entityCollisionX = entity.getDirection() == Direction.RIGHT ? entity.getX() + entity.getCollisionAreaRectangle().x :
+                (entity.getX() + entity.getCollisionAreaRectangle().x + entity.getCollisionAreaRectangle().width - entity.getHspeed());
+        double entityCollisionY = entity.getDirection() == Direction.DOWN ? entity.getY() + entity.getCollisionAreaRectangle().y :
+                (entity.getY() + entity.getCollisionAreaRectangle().y + entity.getCollisionAreaRectangle().height - entity.getVspeed());
 
-        int entityColumn = entityCollisionX / gp.tileSize;
-        int entityRow = entityCollisionY / gp.tileSize;
+        int entityColumn = (int)(entityCollisionX / gp.getWidthTileSize());
+        int entityRow = (int)(entityCollisionY / gp.getHeightTileSize());
 
         //for going to another side of the board(horizontally)
-        if (entityColumn - 1 < 0 || entityColumn + 1 >= gp.maxScreenColumn) {
+        if (entityColumn - 1 < 0 || entityColumn + 1 >= gp.getMaxScreenColumn()) {
             switch (direction) {
                 case UP, DOWN -> {
                     entity.collision = true;
@@ -50,55 +50,51 @@ public class CollisionChecker {
         }
 
         //for ethereal player to not go out of borders
-        if ((entity instanceof Player) && ((Player)entity).ethereal) {
-            if (neverPassableTileNums.contains(gp.tileManager.tiles[entityRow][entityColumn].tileType)) {
+        if ((entity instanceof Player) && ((Player)entity).isEthereal()) {
+            if (neverPassableTileNums.contains(gp.getTileManager().getTiles()[entityRow][entityColumn].getTileType())) {
                 entity.collision = true;
             }
             return;
         }
 
-        if (gp.tileManager.tiles[entityRow][entityColumn] == null) {
-            System.out.println("reached");
-        }
-
-        if (gp.tileManager.tiles[entityRow][entityColumn].collision) {
+        if (gp.getTileManager().getTiles()[entityRow][entityColumn].isCollision()) {
             //for ghosts to be able to go through the gate
-            entity.collision = !((entity instanceof Ghost) && gp.tileManager.tiles[entityRow][entityColumn].tileType == 41 &&
-                    (((Ghost) entity).eaten || ((Ghost) entity).goingOutOfCage));
+            entity.collision = !((entity instanceof Ghost) && gp.getTileManager().getTiles()[entityRow][entityColumn].getTileType() == 41 &&
+                    (((Ghost) entity).isEaten() || ((Ghost) entity).isGoingOutOfCage()));
         }
     }
 
     public int checkEntities(Entity player, ArrayList<? extends Entity> entities) {
         int returnIndex = -1;
-        player.collisionAreaRectangle.x += player.x;
-        player.collisionAreaRectangle.y += player.y;
+        player.getCollisionAreaRectangle().x += player.getX();
+        player.getCollisionAreaRectangle().y += player.getY();
 
         //adjusting player collision to his movement
-        switch (player.direction) {
-            case UP -> player.collisionAreaRectangle.y -= player.speed;
-            case DOWN -> player.collisionAreaRectangle.y += player.speed;
-            case RIGHT -> player.collisionAreaRectangle.x += player.speed;
-            case LEFT -> player.collisionAreaRectangle.x -= player.speed;
+        switch (player.getDirection()) {
+            case UP -> player.getCollisionAreaRectangle().y -= player.getVspeed();
+            case DOWN -> player.getCollisionAreaRectangle().y += player.getVspeed();
+            case RIGHT -> player.getCollisionAreaRectangle().x += player.getHspeed();
+            case LEFT -> player.getCollisionAreaRectangle().x -= player.getHspeed();
         }
 
         for (int i = 0; i < entities.size(); i++) {
             //adjusting object's collision also
-            entities.get(i).collisionAreaRectangle.x += entities.get(i).x;
-            entities.get(i).collisionAreaRectangle.y += entities.get(i).y;
+            entities.get(i).getCollisionAreaRectangle().x += entities.get(i).getX();
+            entities.get(i).getCollisionAreaRectangle().y += entities.get(i).getY();
 
             //checking whether they intersect
-            if (player.collisionAreaRectangle.intersects(entities.get(i).collisionAreaRectangle)) {
+            if (player.getCollisionAreaRectangle().intersects(entities.get(i).getCollisionAreaRectangle())) {
                 returnIndex = i;
             }
 
             //returning object's collision to normal
-            entities.get(i).collisionAreaRectangle.x = entities.get(i).collisionAreaDefaultX;
-            entities.get(i).collisionAreaRectangle.y = entities.get(i).collisionAreaDefaultY;
+            entities.get(i).getCollisionAreaRectangle().x = entities.get(i).getCollisionAreaDefaultX();
+            entities.get(i).getCollisionAreaRectangle().y = entities.get(i).getCollisionAreaDefaultY();
         }
 
         //getting player collision to normal state
-        player.collisionAreaRectangle.x = player.collisionAreaDefaultX;
-        player.collisionAreaRectangle.y = player.collisionAreaDefaultY;
+        player.getCollisionAreaRectangle().x = player.getCollisionAreaDefaultX();
+        player.getCollisionAreaRectangle().y = player.getCollisionAreaDefaultY();
         return returnIndex;
     }
 }

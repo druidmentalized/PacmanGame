@@ -4,8 +4,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +15,11 @@ public class GameMenu {
     JFrame frame = new JFrame("Pacman");
     private final JPanel panelsDeck = new JPanel();
     private Font emulogicFont;
-    private final ArrayList<String> boostersCollection = new ArrayList<>();
     private final HashMap<String, JLabel> mapsNamesToPreviewPhotos = new HashMap<>();
+    private final DefaultListModel<Highscore> listModel = new DefaultListModel<>();
+    private JList<Highscore> highscoreList;
+    private int lastTimePlayed;
+    private int lastScorePlayed;
 
     public GameMenu() {
         fillMapsMap();
@@ -41,9 +43,17 @@ public class GameMenu {
         mapsNamesToPreviewPhotos.put("Small", new JLabel(imageIcon));
 
         //SQUARED
+        imageIcon = new ImageIcon("res/menu/squared_map_preview.png");
+        resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth(), imageIcon.getIconHeight(), Image.SCALE_SMOOTH);
+        imageIcon = new ImageIcon(resizedImage);
+        mapsNamesToPreviewPhotos.put("Squared", new JLabel(imageIcon));
 
         //HUMAN LIKE
-        mapsNamesToPreviewPhotos.put("Humanlike", new JLabel());
+        imageIcon = new ImageIcon("res/menu/humanlike_map_preview.png");
+        resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth() / 2, imageIcon.getIconHeight() / 2, Image.SCALE_SMOOTH);
+        imageIcon = new ImageIcon(resizedImage);
+        mapsNamesToPreviewPhotos.put("Humanlike", new JLabel(imageIcon));
+
 
         //ORIGINAL
         imageIcon = new ImageIcon("res/menu/original_map_preview.png");
@@ -67,7 +77,7 @@ public class GameMenu {
         frame.setSize(688, 903);
         frame.setLayout(null);
         frame.setBackground(Color.BLACK);
-        //frame.setResizable(false);
+        frame.setResizable(false);
 
         //creating gif background
         JLabel backgroundGIF = new JLabel(new ImageIcon("res/menu/menu_background.gif"), JLabel.CENTER);
@@ -94,18 +104,36 @@ public class GameMenu {
         //Credits Panel
         JPanel creditsPanel = createCreditsPanel();
 
+        //Choosing name Panel
+        JPanel highscoreNameChooserPanel = createHighscoreNameChoosePanel();
+
 
         //Add panels to the frame
         panelsDeck.add(mainMenuPanel, "MainMenu");
         panelsDeck.add(playPanel, "Play");
+        panelsDeck.add(highscoresPanel, "Highscores");
         panelsDeck.add(optionsPanel, "Options");
         panelsDeck.add(creditsPanel, "Credits");
+        panelsDeck.add(highscoreNameChooserPanel, "ChooseNameHighscore");
+
         frame.add(panelsDeck);
 
         //Display the frame
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveHighscores();
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                saveHighscores();
+            }
+        });
     }
 
     private JPanel createMainMenuPanel() {
@@ -199,7 +227,10 @@ public class GameMenu {
         creditsButton.addActionListener(e -> changeWindow("Credits"));
 
         //EXIT button
-        exitButton.addActionListener(e -> System.exit(0));
+        exitButton.addActionListener(e -> {
+            saveHighscores();
+            System.exit(0);
+        });
 
         return mainMenuPanel;
     }
@@ -209,9 +240,9 @@ public class GameMenu {
         playPanel.setOpaque(false);
 
 
-        int width = 0;
-        int positionX = 0;
-        int height = 0;
+        int width;
+        int positionX;
+        int height;
         int positionY = 0;
 
         //creating title
@@ -241,30 +272,7 @@ public class GameMenu {
 
         //creating combobox to choose custom map
         String[] maps = mapsNamesToPreviewPhotos.keySet().toArray(new String[0]);
-        JComboBox<String> mapsBox = new JComboBox<>(maps);
-        mapsBox.setFont(emulogicFont);
-        mapsBox.setFont(mapsBox.getFont().deriveFont(18f));
-        mapsBox.setForeground(Color.WHITE);
-        mapsBox.setFocusable(false);
-        mapsBox.setBackground(new Color(40, 40, 40));
-        mapsBox.setBorder(new LineBorder(Color.WHITE, 3));
-        mapsBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
-            JLabel label = new JLabel(value);
-            label.setOpaque(true);
-            label.setBackground(new Color(40, 40, 40));
-            label.setForeground(Color.WHITE);
-            label.setFont(emulogicFont);
-            label.setFont(label.getFont().deriveFont(18f));
-
-            if (isSelected) {
-                label.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
-                label.setForeground(Color.WHITE);
-            } else {
-                label.setBorder(null);
-            }
-
-            return label;
-        });
+        JComboBox<String> mapsBox = getStringJComboBox(maps);
 
         width = 250;
         positionX = calculatePosX(width);
@@ -273,15 +281,12 @@ public class GameMenu {
         mapsBox.setBounds(positionX, positionY, width, height);
         playPanel.add(mapsBox);
 
-        mapsBox.addActionListener(e -> {
-            cardLayout.show(previewMapPanel, (String) mapsBox.getSelectedItem());
-        });
+        mapsBox.addActionListener(e -> cardLayout.show(previewMapPanel, (String) mapsBox.getSelectedItem()));
 
         //creating back button
         JButton backButton = createButton("BACK");
         width = 100;
         positionX = 20;
-        height = 50;
         positionY = 800;
         backButton.setBounds(positionX, positionY, width, height);
         playPanel.add(backButton);
@@ -301,23 +306,89 @@ public class GameMenu {
 
         playButton.addActionListener(e -> {
             frame.setState(JFrame.ICONIFIED);
-            Main.createGameWindow(frame, (String) mapsBox.getSelectedItem(), boostersCollection);
+            Main.createGameWindow(frame, (String) mapsBox.getSelectedItem(), this);
         });
 
         return playPanel;
     }
 
     private JPanel createHighscoresPanel() {
-        return null;
+        JPanel highscoresPanel = new JPanel(null);
+        highscoresPanel.setOpaque(false);
+
+        int width;
+        int positionX;
+        int height;
+        int positionY = 0;
+
+        //title label
+        JLabel titleLabel = createLabel("HIGHSCORES");
+        titleLabel.setFont(titleLabel.getFont().deriveFont(40f));
+        width = 600;
+        positionX = calculatePosX(width);
+        height = 150;
+        titleLabel.setBounds(positionX, positionY, width, height);
+        highscoresPanel.add(titleLabel);
+
+        //JList & JScrollPane for highscores accounting
+
+        highscoreList = new JList<>();
+        highscoreList.setModel(listModel);
+        highscoreList.setFont(emulogicFont);
+        highscoreList.setFont(highscoreList.getFont().deriveFont(20f));
+        highscoreList.setBackground(new Color(20, 20, 20, 170));
+        highscoreList.setForeground(Color.WHITE);
+        highscoreList.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
+        highscoreList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof Highscore highscore) {
+                    setText(highscore.toString());
+                }
+                return this;
+            }
+        });
+
+        //adding all previous elements to JList
+        ArrayList<Highscore> highscores = Highscore.readFromFile();
+        for (Highscore highscore : highscores) {
+            listModel.addElement(highscore);
+        }
+
+        positionY += 110;
+        height = 650;
+        highscoreList.setBounds(positionX, positionY, width, height);
+        JScrollPane jScrollPane = new JScrollPane(highscoreList);
+        jScrollPane.setBackground(new Color(20, 20, 20, 170));
+        jScrollPane.setBounds(highscoreList.getBounds());
+        highscoresPanel.add(jScrollPane);
+
+        //creating BACK button
+        JButton backButton = createButton("BACK");
+        width = 200;
+        positionX = calculatePosX(width);
+        height = 50;
+        positionY = 800;
+        backButton.setBounds(positionX, positionY, width, height);
+        highscoresPanel.add(backButton);
+
+        //------------------ACTION LISTENERS-----------------------
+
+        backButton.addActionListener(e -> changeWindow("MainMenu"));
+
+        return highscoresPanel;
     }
 
     private JPanel createOptionsPanel() {
         JPanel optionsPanel = new JPanel(null); // null layout to freely position components
         optionsPanel.setOpaque(false);
 
-        int width = 0;
-        int positionX = 0;
-        int height = 0;
+        int width;
+        int positionX;
+        int height;
         int positionY = 0;
 
         //creating title label
@@ -428,9 +499,82 @@ public class GameMenu {
         return creditsPanel;
     }
 
+    private JPanel createHighscoreNameChoosePanel() {
+        JPanel highscoreNameChooserPanel = new JPanel(null);
+        highscoreNameChooserPanel.setOpaque(false);
+
+        int width;
+        int positionX;
+        int height;
+        int positionY = 0;
+
+        //creating title
+        JLabel titleLabel = createLabel("NEW SCORE");
+        titleLabel.setFont(titleLabel.getFont().deriveFont(40f));
+        width = 600;
+        positionX = calculatePosX(width);
+        height = 150;
+        titleLabel.setBounds(positionX, positionY, width, height);
+        highscoreNameChooserPanel.add(titleLabel);
+
+        //label with prompt
+        JLabel promptLabel = createLabel("Choose your name:");
+        width = 400;
+        positionX = calculatePosX(width);
+        height = 75;
+        positionY += 250;
+        promptLabel.setBounds(positionX, positionY, width, height);
+        highscoreNameChooserPanel.add(promptLabel);
+
+        JTextField nameField = new JTextField();
+        nameField.setFont(emulogicFont);
+        nameField.setFont(nameField.getFont().deriveFont(21f));
+        nameField.setBackground(new Color(20, 20,20));
+        nameField.setForeground(Color.WHITE);
+        nameField.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
+        positionY += 100;
+        nameField.setBounds(positionX, positionY, width, height);
+        highscoreNameChooserPanel.add(nameField);
+
+        //creating helper JLabel
+        JLabel helperLabel = createLabel("");
+        positionY += 100;
+        width = 600;
+        positionX = calculatePosX(width);
+        helperLabel.setBounds(positionX, positionY, width, height);
+        helperLabel.setFont(helperLabel.getFont().deriveFont(13f));
+        highscoreNameChooserPanel.add(helperLabel);
+
+        //creating SUBMIT button
+        JButton submitButton = createButton("SUBMIT");
+        width = 200;
+        positionX = calculatePosX(width);
+        height = 50;
+        positionY = 700;
+        submitButton.setBounds(positionX, positionY, width, height);
+        highscoreNameChooserPanel.add(submitButton);
+
+        //------------------ACTION LISTENERS-----------------------
+
+        submitButton.addActionListener(e -> {
+            if (nameField.getText().isEmpty()) {
+                helperLabel.setText("You must enter your nickname first!");
+            }
+            else {
+                listModel.addElement(new Highscore(nameField.getText(), lastScorePlayed, lastTimePlayed));
+                nameField.setText("");
+                lastScorePlayed = 0;
+                lastTimePlayed = 0;
+                changeWindow("MainMenu");
+            }
+        });
+
+        return highscoreNameChooserPanel;
+    }
+
 
     // HELPER METHODS
-    private void changeWindow(String changeTo) {
+    public void changeWindow(String changeTo) {
         CardLayout cardLayout = (CardLayout) panelsDeck.getLayout();
         cardLayout.show(panelsDeck, changeTo);
     }
@@ -477,7 +621,53 @@ public class GameMenu {
         return label;
     }
 
+    private JComboBox<String> getStringJComboBox(String[] maps) {
+        JComboBox<String> mapsBox = new JComboBox<>(maps);
+        mapsBox.setFont(emulogicFont);
+        mapsBox.setFont(mapsBox.getFont().deriveFont(18f));
+        mapsBox.setForeground(Color.WHITE);
+        mapsBox.setFocusable(false);
+        mapsBox.setBackground(new Color(40, 40, 40));
+        mapsBox.setBorder(new LineBorder(Color.WHITE, 3));
+        mapsBox.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+            JLabel label = new JLabel(value);
+            label.setOpaque(true);
+            label.setBackground(new Color(40, 40, 40));
+            label.setForeground(Color.WHITE);
+            label.setFont(emulogicFont);
+            label.setFont(label.getFont().deriveFont(18f));
+
+            if (isSelected) {
+                label.setBorder(BorderFactory.createLineBorder(Color.WHITE, 3));
+                label.setForeground(Color.WHITE);
+            } else {
+                label.setBorder(null);
+            }
+
+            return label;
+        });
+        return mapsBox;
+    }
+
     private int calculatePosX(int width) {
         return (frame.getWidth() - width) / 2;
-    };
+    }
+
+    private void saveHighscores() {
+        ArrayList<Highscore> highscoreArrayList = new ArrayList<>();
+        for (int i = 0; i < highscoreList.getModel().getSize(); i++) {
+            highscoreArrayList.add(highscoreList.getModel().getElementAt(i));
+        }
+        Highscore.placeInFile(highscoreArrayList);
+    }
+
+
+    //GETTERS & SETTERS
+    //setters
+    public void setLastTimePlayed(int lastTimePlayed) {
+        this.lastTimePlayed = lastTimePlayed;
+    }
+    public void setLastScorePlayed(int lastScorePlayed) {
+        this.lastScorePlayed = lastScorePlayed;
+    }
 }

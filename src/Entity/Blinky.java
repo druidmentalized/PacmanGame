@@ -2,8 +2,6 @@ package Entity;
 
 import Main.GamePanel;
 
-import java.util.Random;
-
 public class Blinky extends Ghost {
 
     public Blinky(GamePanel gp) {
@@ -33,7 +31,7 @@ public class Blinky extends Ghost {
     }
 
     @Override
-    protected int[] findInChaseMode() {
-        return new int[]{gp.player.x, gp.player.y};
+    protected Point findInChaseMode() {
+        return new Point(gp.getPlayer().x, gp.getPlayer().y);
     }
 }
