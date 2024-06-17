@@ -4,7 +4,7 @@ import Main.Direction;
 import Main.GamePanel;
 import Main.GameState;
 import Object.*;
-
+import Tile.Tile;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -263,6 +263,9 @@ public class Player extends Entity {
                 passedObjects.remove(index);
                 if (gp.isPelletEaten()) {
                     gp.getGhostsBehaviourThreadTask().setFrightenedCounter(gp.getGhostsBehaviourThreadTask().getFrightenedTiming());
+                    for (Ghost ghost : gp.getGhosts()) {
+                        ghost.setWasEatenDuringPellet(false);
+                    }
                 }
                 else gp.setPelletEaten(true);
 
@@ -272,9 +275,10 @@ public class Player extends Entity {
                 gp.setScore(gp.getScore() + 50);
                 ((Booster) passedObjects.get(index)).setConsumed(true);
                 ((Booster) passedObjects.get(index)).setTimeCounter(0);
+                passedObjects.get(index).setVisible(false);
+                passedObjects.get(index).x = 0;
+                passedObjects.get(index).y = 0;
                 if (passedObjects.get(index) instanceof Speed_booster_obj) {
-                    passedObjects.get(index).x = 8 * gp.getWidthTileSize();
-                    passedObjects.get(index).y = 1;
                     hspeed += (int)(0.67 * gp.getWidthScale());
                     vspeed += (int)(0.67 * gp.getHeightScale());
                 }
@@ -285,13 +289,9 @@ public class Player extends Entity {
                     gp.getUi().addHealth();
                 }
                 else if (passedObjects.get(index) instanceof Wall_piercer_booster_obj) {
-                    passedObjects.get(index).x = 10 * gp.getWidthTileSize();
-                    passedObjects.get(index).y = 1;
                     ethereal = true;
                 }
                 else if (passedObjects.get(index) instanceof Invisibility_booster_obj) {
-                    passedObjects.get(index).x = 10 * gp.getWidthTileSize();
-                    passedObjects.get(index).y = 1;
                     invisible = true;
                 }
                 else if (passedObjects.get(index) instanceof Ghosts_freezer_obj) {
@@ -335,6 +335,31 @@ public class Player extends Entity {
                 gp.setGameState(GameState.DEAD);
                 lives--;
                 gp.getUi().deductHealth();
+            }
+        }
+    }
+
+    public void pushOutToMap() {
+        int tileType = gp.getTileManager().getTiles()[currentRow][currentColumn].getTileType();
+        if (tileType != 10 && tileType != 11 && tileType != 12) {
+            boolean findingTile = true;
+            int currentDirection = 0;
+            while (findingTile) {
+                Tile tile;
+                switch (currentDirection % 4) {
+                    case 0/*UP*/ -> tile = gp.getTileManager().getTiles()[currentRow - (1 + currentDirection / 4)][currentColumn];
+                    case 1/*LEFT*/ -> tile = gp.getTileManager().getTiles()[currentRow][currentColumn - (1 + currentDirection / 4)];
+                    case 2/*DOWN*/ -> tile = gp.getTileManager().getTiles()[currentRow + (1 + currentDirection / 4)][currentColumn];
+                    case 3/*RIGHT*/ -> tile = gp.getTileManager().getTiles()[currentRow][currentColumn + (1 + currentDirection / 4)];
+                    default -> tile = gp.getTileManager().getTiles()[currentRow][currentColumn];
+                }
+                tileType = tile.getTileType();
+                if (tileType == 10 || tileType == 11 || tileType == 12) {
+                    this.x = tile.getX() - collisionAreaRectangle.x;
+                    this.y = tile.getY() - collisionAreaRectangle.y;
+                    findingTile = false;
+                }
+                currentDirection++;
             }
         }
     }

@@ -51,6 +51,7 @@ public class Main
     private static void changeToMainMenu(GameMenu gm, GamePanel gp, Frame parentFrame) {
         gm.setLastScorePlayed(gp.getScore());
         gm.setLastTimePlayed(gp.getUi().getGameTimeCounter());
+        gm.setLastMaxLevelPlayed(gp.getLevel());
         gm.changeWindow("ChooseNameHighscore");
         parentFrame.setState(JFrame.NORMAL);
         parentFrame.setVisible(true);

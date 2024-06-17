@@ -51,7 +51,7 @@ public class UI implements Resizable, Redrawable {
         //prepare pauseLabel
         pauseLabel = createLabel("PAUSE");
         pauseLabel.setFont(pauseLabel.getFont().deriveFont(50F));
-        pauseLabel.setBounds(gp.getMaxScreenWidth() / 2 - 4 * gp.getWidthTileSize(), gp.getMaxScreenHeight() / 2 - 5 * gp.getHeightTileSize(),
+        pauseLabel.setBounds(gp.getMaxScreenWidth() / 2 - 5 * gp.getWidthTileSize(), gp.getMaxScreenHeight() / 2 - 5 * gp.getHeightTileSize(),
                 20 * gp.getWidthTileSize(), 5 * gp.getHeightTileSize());
         gp.getUiPanel().add(pauseLabel);
 
@@ -124,6 +124,7 @@ public class UI implements Resizable, Redrawable {
         }
         healthLabels.add(healthLabel);
         gp.getUiPanel().add(healthLabel);
+        gp.getUiPanel().repaint();
     }
 
     public void deductHealth() {

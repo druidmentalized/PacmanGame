@@ -220,10 +220,8 @@ public abstract class Ghost extends Entity {
                 gp.getCollisionChecker().checkIfCanMove(this, checkedDirection);
                 if (!collision) {
                     switch (checkedDirection) {
-                        case UP -> {
-                            vectors.put(checkedDirection, calculateVectorDistance(x, y - gp.getHeightTileSize(),
+                        case UP -> vectors.put(checkedDirection, calculateVectorDistance(x, y - gp.getHeightTileSize(),
                                     targetX, targetY));
-                        }
                         case LEFT -> vectors.put(checkedDirection, calculateVectorDistance(x - gp.getWidthTileSize(), y,
                                 targetX, targetY));
                         case DOWN -> vectors.put(checkedDirection, calculateVectorDistance(x, y + gp.getHeightTileSize(),

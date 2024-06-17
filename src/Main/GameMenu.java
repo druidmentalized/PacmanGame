@@ -20,6 +20,7 @@ public class GameMenu {
     private JList<Highscore> highscoreList;
     private int lastTimePlayed;
     private int lastScorePlayed;
+    private int lastMaxLevelPlayed;
 
     public GameMenu() {
         fillMapsMap();
@@ -99,7 +100,7 @@ public class GameMenu {
         JPanel highscoresPanel = createHighscoresPanel();
 
         //Options Panel
-        JPanel optionsPanel = createOptionsPanel();
+        JPanel controlsPanel = createColntorlsPanel();
 
         //Credits Panel
         JPanel creditsPanel = createCreditsPanel();
@@ -112,7 +113,7 @@ public class GameMenu {
         panelsDeck.add(mainMenuPanel, "MainMenu");
         panelsDeck.add(playPanel, "Play");
         panelsDeck.add(highscoresPanel, "Highscores");
-        panelsDeck.add(optionsPanel, "Options");
+        panelsDeck.add(controlsPanel, "Controls");
         panelsDeck.add(creditsPanel, "Credits");
         panelsDeck.add(highscoreNameChooserPanel, "ChooseNameHighscore");
 
@@ -184,7 +185,7 @@ public class GameMenu {
         JButton playButton = createButton("PLAY");
         JButton highscoresButton = createButton("HIGHSCORES");
         highscoresButton.setFont(highscoresButton.getFont().deriveFont(18f));
-        JButton optionsButton = createButton("OPTIONS");
+        JButton optionsButton = createButton("CONTROLS");
         JButton creditsButton = createButton("CREDITS");
         JButton exitButton = createButton("EXIT");
 
@@ -222,7 +223,7 @@ public class GameMenu {
         highscoresButton.addActionListener(e -> changeWindow("Highscores"));
 
         //OPTIONS button
-        optionsButton.addActionListener(e -> changeWindow("Options"));
+        optionsButton.addActionListener(e -> changeWindow("Controls"));
 
         //CREDITS button
         creditsButton.addActionListener(e -> changeWindow("Credits"));
@@ -385,9 +386,9 @@ public class GameMenu {
         return highscoresPanel;
     }
 
-    private JPanel createOptionsPanel() {
-        JPanel optionsPanel = new JPanel(null); // null layout to freely position components
-        optionsPanel.setOpaque(false);
+    private JPanel createColntorlsPanel() {
+        JPanel contorlsPanel = new JPanel(null); // null layout to freely position components
+        contorlsPanel.setOpaque(false);
 
         int width;
         int positionX;
@@ -395,15 +396,56 @@ public class GameMenu {
         int positionY = 0;
 
         //creating title label
-        JLabel titleLabel = createLabel("OPTIONS");
+        JLabel titleLabel = createLabel("CONTROLS");
         titleLabel.setFont(titleLabel.getFont().deriveFont(70f));
-        width = 500;
+        width = 600;
         positionX = calculatePosX(width) ;
         height = 150;
         titleLabel.setBounds(positionX, positionY, width, height);
-        optionsPanel.add(titleLabel);
+        contorlsPanel.add(titleLabel);
 
-        //creating options
+        //creating controls
+
+        //W - UP
+        JLabel upLabel = createLabel("W -- UP");
+        width = 250;
+        positionX = calculatePosX(width);
+        positionY += height + 25;
+        height = 50;
+        upLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(upLabel);
+
+        //S -- DOWN
+        JLabel downLabel = createLabel("S -- DOWN");
+        positionY += height + 50;
+        downLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(downLabel);
+
+        //A -- LEFT
+        JLabel leftLabel = createLabel("A -- LEFT");
+        positionY += height + 50;
+        leftLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(leftLabel);
+
+        //D -- RIGHT
+        JLabel rightLabel = createLabel("D -- RIGHT");
+        positionY += height + 50;
+        rightLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(rightLabel);
+
+        //ESC -- PAUSE
+        JLabel pauseLabel = createLabel("ESC -- PAUSE");
+        positionY += height + 50;
+        pauseLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(pauseLabel);
+
+        //F1 -- EXIT
+        JLabel exitLabel = createLabel("F1 -- EXIT");
+        positionY += height + 50;
+        exitLabel.setBounds(positionX, positionY, width, height);
+        contorlsPanel.add(exitLabel);
+
+
 
         //creating back button
         JButton backButton = createButton("BACK");
@@ -412,13 +454,13 @@ public class GameMenu {
         height = 50;
         positionY = 800;
         backButton.setBounds(positionX, positionY, width, height);
-        optionsPanel.add(backButton);
+        contorlsPanel.add(backButton);
 
         //------------------ACTION LISTENERS-----------------------
 
         backButton.addActionListener(e -> changeWindow("MainMenu"));
 
-        return optionsPanel;
+        return contorlsPanel;
     }
 
     private JPanel createCreditsPanel() {
@@ -564,7 +606,7 @@ public class GameMenu {
                 helperLabel.setText("You must enter your nickname first!");
             }
             else {
-                listModel.addElement(new Highscore(nameField.getText(), lastScorePlayed, lastTimePlayed));
+                listModel.addElement(new Highscore(nameField.getText(), lastScorePlayed, lastTimePlayed, lastMaxLevelPlayed));
                 nameField.setText("");
                 lastScorePlayed = 0;
                 lastTimePlayed = 0;
@@ -672,5 +714,8 @@ public class GameMenu {
     }
     public void setLastScorePlayed(int lastScorePlayed) {
         this.lastScorePlayed = lastScorePlayed;
+    }
+    public void setLastMaxLevelPlayed(int lastMaxLevelPlayed) {
+        this.lastMaxLevelPlayed = lastMaxLevelPlayed;
     }
 }

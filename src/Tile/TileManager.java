@@ -83,8 +83,11 @@ public class TileManager implements Resizable, Redrawable {
                 mapLineInNumbers = bufferedReader.readLine().split(" ");
                 for (int column = 0; column < columns; column++) {
                     number = Integer.parseInt(mapLineInNumbers[column]);
+                    //making tile
                     tiles[row][column] = new Tile(number, mapColor, gp);
-                    //tiles[row][column].collisionAreaRectangle = new Rectangle.Double(column * gp.widthTileSize, row * gp.heightTileSize, 8 * gp.widthScale, 8 * gp.heightScale);
+                    tiles[row][column].setLocation(column * gp.getWidthTileSize(), row * gp.getHeightTileSize());
+
+                    //setting constraints & adding to map
                     gbc.gridx = column;
                     gbc.gridy = row;
                     mapPanel.add(tiles[row][column], gbc);
@@ -121,6 +124,7 @@ public class TileManager implements Resizable, Redrawable {
         for (int row = 0; row < gp.getMaxScreenRow(); row++) {
             for (int column = 0; column < gp.getMaxScreenColumn(); column++) {
                 tiles[row][column].setIcon(tiles[row][column].getScaledIcon(tiles[row][column].getImage()));
+                tiles[row][column].setLocation(column * gp.getWidthTileSize(), row * gp.getHeightTileSize());
             }
         }
     }

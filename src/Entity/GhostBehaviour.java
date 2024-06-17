@@ -138,7 +138,7 @@ public class GhostBehaviour implements Runnable {
     private void tryDropBooster(Ghost ghost) {
         //random booster with 25% chance of dropping
         Random random = new Random();
-        if (random.nextInt(100) <= 25) {
+        if (random.nextInt(100) <= 100) {
             switch (gp.getBoostersCollection().get(random.nextInt(gp.getBoostersCollection().size()))) {
                 case "Speed booster" -> gp.getBoosters().add(new Speed_booster_obj(gp, ghost.x, ghost.y));
                 case "Heart" -> gp.getBoosters().add(new Heart_booster_obj(gp, ghost.x, ghost.y));

@@ -10,16 +10,18 @@ public class Highscore implements Serializable
     private final String playerName;
     private final int points;
     private final int time;
+    private final int level;
 
-    public Highscore(String playerName, int points, int time) {
+    public Highscore(String playerName, int points, int time, int level) {
         this.points = points;
         this.playerName = playerName;
         this.time = time;
+        this.level = level;
     }
 
     @Override
     public String toString() {
-        return playerName + ": " + points + " pts, " + time + " s";
+        return playerName + ": " + points + "pts, " + time + "s, " + level + "lvl";
     }
     public static void placeInFile(ArrayList<Highscore> highscoresList) {
         try {

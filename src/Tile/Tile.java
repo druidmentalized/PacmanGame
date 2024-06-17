@@ -29,7 +29,8 @@ public class Tile extends JLabel {
             "corner_top_bottom_left_border"/*33*/, "corner_top_bottom_right_border"/*34*/,
             "corner_left_right_top_border"/*35*/, "corner_left_right_bottom_border"/*36*/,
             "corner_right_left_top_border"/*37*/, "corner_right_left_bottom_border"/*38*/,
-            "corner_bottom_top_left_border"/*39*/, "corner_bottom_top_right_border"/*40*/, "barrier"/*41*/
+            "corner_bottom_top_left_border"/*39*/, "corner_bottom_top_right_border"/*40*/, "barrier"/*41*/,
+            "filling_void"/*42(insides of structures)*/
     };
     private BufferedImage image;
     private BufferedImage whiteImage;
@@ -43,7 +44,7 @@ public class Tile extends JLabel {
         collision = tileType != 10 && tileType != 11 && tileType != 12;
         String pathName;
         String whitePathName;
-        if (tileType == 10 || tileType == 11 || tileType == 12) {
+        if (tileType == 10 || tileType == 11 || tileType == 12 || tileType == 42) {
             pathName = "res/tiles/void.png";
             whitePathName = "res/tiles/void.png";
         }

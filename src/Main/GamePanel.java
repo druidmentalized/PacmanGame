@@ -210,14 +210,17 @@ public class GamePanel extends JPanel implements Runnable, Resizable
                 {
                     //removing effects of ended boosters and boosters themselves
                     if (boosters.get(i) instanceof Speed_booster_obj) player.recalculateSpeed();
-                    else if (boosters.get(i) instanceof Wall_piercer_booster_obj) player.setEthereal(false);
+                    else if (boosters.get(i) instanceof Wall_piercer_booster_obj) {
+                        player.setEthereal(false);
+                        player.pushOutToMap();
+                    }
                     else if (boosters.get(i) instanceof Invisibility_booster_obj) player.setInvisible(false);
                     eatablesPanel.remove(boosters.get(i));
                     boosters.remove(i);
                     repaint();
                 }
                 //removing boosters on the map
-                else if (boosters.get(i).getTimeCounter() == 420) {
+                else if (boosters.get(i).getTimeCounter() == 420 && !boosters.get(i).isConsumed()) {
                     eatablesPanel.remove(boosters.get(i));
                     boosters.remove(i);
                     repaint();
@@ -306,7 +309,7 @@ public class GamePanel extends JPanel implements Runnable, Resizable
     public void resize() {
         //changing dimensions
         maxScreenWidth = widthTileSize * maxScreenColumn;
-        maxScreenHeight = heightTileSize * maxScreenHeight;
+        maxScreenHeight = heightTileSize * maxScreenRow;
         widthScale = (double) widthTileSize / originalTileSize;
         heightScale = (double) heightTileSize / originalTileSize;
         widthRatio = (double) widthTileSize / prevWidthTileSize;
