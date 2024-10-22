@@ -10,8 +10,8 @@ public class Speed_booster_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        idle1 = getImage("res/objects/speed_booster_1");
-        idle2 = getImage("res/objects/speed_booster_2");
+        idle1 = getImage("/objects/speed_booster_1");
+        idle2 = getImage("/objects/speed_booster_2");
     }
 
 }

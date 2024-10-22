@@ -45,16 +45,16 @@ public class Tile extends JLabel {
         String pathName;
         String whitePathName;
         if (tileType == 10 || tileType == 11 || tileType == 12 || tileType == 42) {
-            pathName = "res/tiles/void.png";
-            whitePathName = "res/tiles/void.png";
+            pathName = "/tiles/void.png";
+            whitePathName = "/tiles/void.png";
         }
         else {
-            pathName = "res/tiles/" + color + "/" + tileTypes[tileType] + ".png";
-            whitePathName = "res/tiles/white/" + tileTypes[tileType] + ".png";
+            pathName = "/tiles/" + color + "/" + tileTypes[tileType] + ".png";
+            whitePathName = "/tiles/white/" + tileTypes[tileType] + ".png";
         }
         try {
-            image = ImageIO.read(new File(pathName));
-            whiteImage = ImageIO.read(new File(whitePathName));
+            image = ImageIO.read(getClass().getResource(pathName));
+            whiteImage = ImageIO.read(getClass().getResource(whitePathName));
         } catch (IOException e) {
             e.printStackTrace();
         }

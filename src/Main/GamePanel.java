@@ -2,8 +2,11 @@ package Main;
 
 import Entity.*;
 import Tile.TileManager;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import Entity.Ghost;
@@ -119,6 +122,13 @@ public class GamePanel extends JPanel implements Runnable, Resizable
         this.setDoubleBuffered(true);
         this.addKeyListener(keyHandler);
         this.setFocusable(true);
+
+        //adding icon to the frame
+        try {
+            window.setIconImage(ImageIO.read(getClass().getResource("/player/pacman_right_1.png")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         //adding player
         player = new Player(this);

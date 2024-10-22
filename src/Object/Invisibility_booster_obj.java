@@ -11,7 +11,7 @@ public class Invisibility_booster_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        idle1 = getImage("res/objects/invisibility_booster_1");
-        idle2 = getImage("res/objects/invisibility_booster_2");
+        idle1 = getImage("/objects/invisibility_booster_1");
+        idle2 = getImage("/objects/invisibility_booster_2");
     }
 }

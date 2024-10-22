@@ -48,45 +48,45 @@ public class Player extends Entity {
 
     @Override
     protected void loadImages() {
-        up1 = getImage("res/player/pacman_up_1");
-        up2 = getImage("res/player/pacman_up_2");
-        up3 = getImage("res/player/pacman_up_3");
+        up1 = getImage("/player/pacman_up_1");
+        up2 = getImage("/player/pacman_up_2");
+        up3 = getImage("/player/pacman_up_3");
 
-        down1 = getImage("res/player/pacman_down_1");
-        down2 = getImage("res/player/pacman_down_2");
-        down3 = getImage("res/player/pacman_down_3");
+        down1 = getImage("/player/pacman_down_1");
+        down2 = getImage("/player/pacman_down_2");
+        down3 = getImage("/player/pacman_down_3");
 
-        right1 = getImage("res/player/pacman_right_1");
-        right2 = getImage("res/player/pacman_right_2");
-        right3 = getImage("res/player/pacman_right_3");
+        right1 = getImage("/player/pacman_right_1");
+        right2 = getImage("/player/pacman_right_2");
+        right3 = getImage("/player/pacman_right_3");
 
-        left1 = getImage("res/player/pacman_left_1");
-        left2 = getImage("res/player/pacman_left_2");
-        left3 = getImage("res/player/pacman_left_3");
+        left1 = getImage("/player/pacman_left_1");
+        left2 = getImage("/player/pacman_left_2");
+        left3 = getImage("/player/pacman_left_3");
 
-        idle1 = getImage("res/player/pacman_idle");
+        idle1 = getImage("/player/pacman_idle");
 
-        death4 = getImage("res/player/pacman_death_4");
-        death5 = getImage("res/player/pacman_death_5");
-        death6 = getImage("res/player/pacman_death_6");
+        death4 = getImage("/player/pacman_death_4");
+        death5 = getImage("/player/pacman_death_5");
+        death6 = getImage("/player/pacman_death_6");
 
-        invisibleIdle = getImage("res/player/pacman_invisible_idle");
+        invisibleIdle = getImage("/player/pacman_invisible_idle");
 
-        invisibleUp1 = getImage("res/player/pacman_invisible_up_1");
-        invisibleUp2 = getImage("res/player/pacman_invisible_up_2");
-        invisibleUp3 = getImage("res/player/pacman_invisible_up_3");
+        invisibleUp1 = getImage("/player/pacman_invisible_up_1");
+        invisibleUp2 = getImage("/player/pacman_invisible_up_2");
+        invisibleUp3 = getImage("/player/pacman_invisible_up_3");
 
-        invisibleDown1 = getImage("res/player/pacman_invisible_down_1");
-        invisibleDown2 = getImage("res/player/pacman_invisible_down_2");
-        invisibleDown3 = getImage("res/player/pacman_invisible_down_3");
+        invisibleDown1 = getImage("/player/pacman_invisible_down_1");
+        invisibleDown2 = getImage("/player/pacman_invisible_down_2");
+        invisibleDown3 = getImage("/player/pacman_invisible_down_3");
 
-        invisibleRight1 = getImage("res/player/pacman_invisible_right_1");
-        invisibleRight2 = getImage("res/player/pacman_invisible_right_2");
-        invisibleRight3 = getImage("res/player/pacman_invisible_right_3");
+        invisibleRight1 = getImage("/player/pacman_invisible_right_1");
+        invisibleRight2 = getImage("/player/pacman_invisible_right_2");
+        invisibleRight3 = getImage("/player/pacman_invisible_right_3");
 
-        invisibleLeft1 = getImage("res/player/pacman_invisible_left_1");
-        invisibleLeft2 = getImage("res/player/pacman_invisible_left_2");
-        invisibleLeft3 = getImage("res/player/pacman_invisible_left_3");
+        invisibleLeft1 = getImage("/player/pacman_invisible_left_1");
+        invisibleLeft2 = getImage("/player/pacman_invisible_left_2");
+        invisibleLeft3 = getImage("/player/pacman_invisible_left_3");
     }
 
     @Override

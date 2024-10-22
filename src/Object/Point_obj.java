@@ -17,7 +17,7 @@ public class Point_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        currentImage = getImage("res/objects/point");
+        currentImage = getImage("/objects/point");
     }
 
     @Override

@@ -12,23 +12,23 @@ public class Inky extends Ghost {
     protected void loadImages() {
         super.loadImages();
 
-        up1 = getImage("res/ghosts/inky_up_1");
-        up2 = getImage("res/ghosts/inky_up_2");
+        up1 = getImage("/ghosts/inky_up_1");
+        up2 = getImage("/ghosts/inky_up_2");
 
-        down1 = getImage("res/ghosts/inky_down_1");
-        down2 = getImage("res/ghosts/inky_down_2");
+        down1 = getImage("/ghosts/inky_down_1");
+        down2 = getImage("/ghosts/inky_down_2");
 
-        right1 = getImage("res/ghosts/inky_right_1");
-        right2 = getImage("res/ghosts/inky_right_2");
+        right1 = getImage("/ghosts/inky_right_1");
+        right2 = getImage("/ghosts/inky_right_2");
 
-        left1 = getImage("res/ghosts/inky_left_1");
-        left2 = getImage("res/ghosts/inky_left_2");
+        left1 = getImage("/ghosts/inky_left_1");
+        left2 = getImage("/ghosts/inky_left_2");
 
-        idle1 = getImage("res/ghosts/inky_idle_1");
-        idle2 = getImage("res/ghosts/inky_idle_2");
+        idle1 = getImage("/ghosts/inky_idle_1");
+        idle2 = getImage("/ghosts/inky_idle_2");
 
-        frozenIdle1 = getImage("res/ghosts/inky_frozen_idle_1");
-        frozenIdle2 = getImage("res/ghosts/inky_frozen_idle_2");
+        frozenIdle1 = getImage("/ghosts/inky_frozen_idle_1");
+        frozenIdle2 = getImage("/ghosts/inky_frozen_idle_2");
     }
 
     @Override

@@ -10,7 +10,7 @@ public class Wall_piercer_booster_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        idle1 = getImage("res/objects/wall_piercer_booster");
-        idle2 = getImage("res/objects/wall_piercer_booster");
+        idle1 = getImage("/objects/wall_piercer_booster");
+        idle2 = getImage("/objects/wall_piercer_booster");
     }
 }

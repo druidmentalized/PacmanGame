@@ -80,18 +80,18 @@ public abstract class Ghost extends Entity {
 
     @Override
     protected void loadImages() {
-        frightened1 = getImage("res/ghosts/ghost_frightened_1");
-        frightened2 = getImage("res/ghosts/ghost_frightened_2");
-        frightenedSoonEnd1 = getImage("res/ghosts/ghost_frightened_soon_end_1");
-        frightenedSoonEnd2 = getImage("res/ghosts/ghost_frightened_soon_end_2");
-        eatenUp = getImage("res/ghosts/ghost_eaten_up");
-        eatenDown = getImage("res/ghosts/ghost_eaten_down");
-        eatenRight = getImage("res/ghosts/ghost_eaten_right");
-        eatenLeft = getImage("res/ghosts/ghost_eaten_left");
-        frozenFrightened1 = getImage("res/ghosts/ghost_frightened_frozen_1");
-        frozenFrightened2 = getImage("res/ghosts/ghost_frightened_frozen_2");
-        frozenFrightenedSoonEnd1 = getImage("res/ghosts/ghost_frightened_frozen_soon_end_1");
-        frozenFrightenedSoonEnd2 = getImage("res/ghosts/ghost_frightened_frozen_soon_end_2");
+        frightened1 = getImage("/ghosts/ghost_frightened_1");
+        frightened2 = getImage("/ghosts/ghost_frightened_2");
+        frightenedSoonEnd1 = getImage("/ghosts/ghost_frightened_soon_end_1");
+        frightenedSoonEnd2 = getImage("/ghosts/ghost_frightened_soon_end_2");
+        eatenUp = getImage("/ghosts/ghost_eaten_up");
+        eatenDown = getImage("/ghosts/ghost_eaten_down");
+        eatenRight = getImage("/ghosts/ghost_eaten_right");
+        eatenLeft = getImage("/ghosts/ghost_eaten_left");
+        frozenFrightened1 = getImage("/ghosts/ghost_frightened_frozen_1");
+        frozenFrightened2 = getImage("/ghosts/ghost_frightened_frozen_2");
+        frozenFrightenedSoonEnd1 = getImage("/ghosts/ghost_frightened_frozen_soon_end_1");
+        frozenFrightenedSoonEnd2 = getImage("/ghosts/ghost_frightened_frozen_soon_end_2");
     }
 
     @Override

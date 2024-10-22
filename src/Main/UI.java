@@ -26,9 +26,8 @@ public class UI implements Resizable, Redrawable {
         this.gp = gp;
 
         try {
-            healthImage = ImageIO.read(new File("res/player/pacman_left_2.png"));
-            InputStream is = getClass().getResourceAsStream("/fonts/emulogic.ttf");
-            emulogic = Font.createFont(Font.TRUETYPE_FONT, is);
+            healthImage = ImageIO.read(getClass().getResource("/player/pacman_left_2.png"));
+            emulogic = Font.createFont(Font.TRUETYPE_FONT, getClass().getResourceAsStream("/fonts/emulogic.ttf"));
         } catch (IOException | FontFormatException e) {
             e.printStackTrace();
         }

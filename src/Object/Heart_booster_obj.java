@@ -33,8 +33,8 @@ public class Heart_booster_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        up1 = getImage("res/objects/heart_booster_1");
-        up2 = getImage("res/objects/heart_booster_2");
-        up3 = getImage("res/objects/heart_booster_3");
+        up1 = getImage("/objects/heart_booster_1");
+        up2 = getImage("/objects/heart_booster_2");
+        up3 = getImage("/objects/heart_booster_3");
     }
 }

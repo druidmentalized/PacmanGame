@@ -2,11 +2,10 @@ package Main;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Highscore implements Serializable
 {
-    private static final String highscoresFilePath = "res/highscores.txt";
+    private static String highscoresFilePath;
     private final String playerName;
     private final int points;
     private final int time;
@@ -56,5 +55,12 @@ public class Highscore implements Serializable
             //nothing, because it allows to get out from the infinite cycle meaning that we reached ending of the file
         }
         return highscoreList;
+    }
+
+    //GETTERS & SETTERS
+
+    //setters
+    public static void setHighscoresFilePath(String filePath) {
+        highscoresFilePath = filePath;
     }
 }

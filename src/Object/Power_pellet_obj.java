@@ -8,7 +8,7 @@ public class Power_pellet_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        idle1 = getImage("res/objects/power_pellet");
+        idle1 = getImage("/objects/power_pellet");
         idle2 = null;
     }
 

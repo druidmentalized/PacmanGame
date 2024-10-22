@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 public abstract class Entity extends JLabel implements Resizable, Redrawable, Updatable
 {
@@ -46,7 +47,7 @@ public abstract class Entity extends JLabel implements Resizable, Redrawable, Up
 
     protected BufferedImage getImage(String filePath) {
         try {
-            return ImageIO.read(new File(filePath + ".png"));
+            return ImageIO.read(getClass().getResource(filePath + ".png"));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -97,6 +98,7 @@ public abstract class Entity extends JLabel implements Resizable, Redrawable, Up
         x = (int)Math.round((x * gp.getWidthRatio()));
         y = (int)Math.round((y * gp.getHeightRatio()));
     }
+
 
     public abstract void setDefaultValues();
     protected abstract void loadImages();

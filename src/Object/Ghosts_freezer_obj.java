@@ -9,7 +9,7 @@ public class Ghosts_freezer_obj extends Booster {
 
     @Override
     protected void loadImages() {
-        idle1 = getImage("res/objects/snowflake_booster");
-        idle2 = getImage("res/objects/snowflake_booster");
+        idle1 = getImage("/objects/snowflake_booster");
+        idle2 = getImage("/objects/snowflake_booster");
     }
 }

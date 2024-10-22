@@ -8,8 +8,11 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class GameMenu {
     JFrame frame = new JFrame("Pacman");
@@ -24,6 +27,7 @@ public class GameMenu {
 
     public GameMenu() {
         fillMapsMap();
+        findHighscoresFilePath();
         startMenu();
     }
 
@@ -32,32 +36,33 @@ public class GameMenu {
         Image resizedImage;
 
         //WIDE
-        imageIcon = new ImageIcon("res/menu/wide_map_preview.png");
+        //imageIcon = new ImageIcon("res/menu/wide_map_preview.png");
+        imageIcon = checkImagePath("/menu/wide_map_preview.png");
         resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth() / 2, imageIcon.getIconHeight() / 2 + 100, Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(resizedImage);
         mapsNamesToPreviewPhotos.put("Wide", new JLabel(imageIcon));
 
         //SMALL
-        imageIcon = new ImageIcon("res/menu/small_map_preview.png");
+        imageIcon = checkImagePath("/menu/small_map_preview.png");
         resizedImage = imageIcon.getImage().getScaledInstance(500, imageIcon.getIconHeight(), Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(resizedImage);
         mapsNamesToPreviewPhotos.put("Small", new JLabel(imageIcon));
 
         //SQUARED
-        imageIcon = new ImageIcon("res/menu/squared_map_preview.png");
+        imageIcon = checkImagePath("/menu/squared_map_preview.png");
         resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth(), imageIcon.getIconHeight(), Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(resizedImage);
         mapsNamesToPreviewPhotos.put("Squared", new JLabel(imageIcon));
 
         //HUMAN LIKE
-        imageIcon = new ImageIcon("res/menu/humanlike_map_preview.png");
+        imageIcon = checkImagePath("/menu/humanlike_map_preview.png");
         resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth() / 2, imageIcon.getIconHeight() / 2, Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(resizedImage);
         mapsNamesToPreviewPhotos.put("Humanlike", new JLabel(imageIcon));
 
 
         //ORIGINAL
-        imageIcon = new ImageIcon("res/menu/original_map_preview.png");
+        imageIcon = checkImagePath("/menu/original_map_preview.png");
         resizedImage = imageIcon.getImage().getScaledInstance(imageIcon.getIconWidth() / 2, imageIcon.getIconHeight() / 2, Image.SCALE_SMOOTH);
         imageIcon = new ImageIcon(resizedImage);
         mapsNamesToPreviewPhotos.put("Original", new JLabel(imageIcon));
@@ -66,7 +71,8 @@ public class GameMenu {
     public void startMenu() {
         //Load custom font
         try {
-            emulogicFont = Font.createFont(Font.TRUETYPE_FONT, new File("res/fonts/emulogic.ttf")).deriveFont(20f);
+            URL fontURL = getClass().getResource("/fonts/emulogic.ttf");
+            emulogicFont = Font.createFont(Font.TRUETYPE_FONT, fontURL.openStream()).deriveFont(20f);
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             ge.registerFont(emulogicFont);
         } catch (IOException | FontFormatException e) {
@@ -80,8 +86,15 @@ public class GameMenu {
         frame.setBackground(Color.BLACK);
         frame.setResizable(false);
 
+        //adding icon to the frame
+        try {
+            frame.setIconImage(ImageIO.read(getClass().getResource("/player/pacman_right_1.png")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         //creating gif background
-        JLabel backgroundGIF = new JLabel(new ImageIcon("res/menu/menu_background.gif"), JLabel.CENTER);
+        JLabel backgroundGIF = new JLabel(checkImagePath("/menu/menu_background.gif"), JLabel.CENTER);
         frame.setContentPane(backgroundGIF);
 
         //panel
@@ -100,7 +113,7 @@ public class GameMenu {
         JPanel highscoresPanel = createHighscoresPanel();
 
         //Options Panel
-        JPanel controlsPanel = createColntorlsPanel();
+        JPanel controlsPanel = createControlsPanel();
 
         //Credits Panel
         JPanel creditsPanel = createCreditsPanel();
@@ -160,14 +173,10 @@ public class GameMenu {
         JLabel titleImage = null;
         BufferedImage originalImage;
         Image scaledImage;
-        try {
-            originalImage = ImageIO.read(new File("res/player/pacman_right_3.png"));
-            int imageDimension = titlePart1.getFontMetrics(titlePart1.getFont()).getHeight();
-            scaledImage = originalImage.getScaledInstance(imageDimension, imageDimension, Image.SCALE_SMOOTH);
-            titleImage = new JLabel(new ImageIcon(scaledImage));
-        } catch (IOException e) {
-            System.err.println("Scaling image wasn't successful");
-        }
+        originalImage = toBufferedImage(Objects.requireNonNull(checkImagePath("/player/pacman_right_3.png")));
+        int imageDimension = titlePart1.getFontMetrics(titlePart1.getFont()).getHeight();
+        scaledImage = originalImage.getScaledInstance(imageDimension, imageDimension, Image.SCALE_SMOOTH);
+        titleImage = new JLabel(new ImageIcon(scaledImage));
 
         //second part of title
         JLabel titlePart2 = new JLabel("man");
@@ -386,9 +395,9 @@ public class GameMenu {
         return highscoresPanel;
     }
 
-    private JPanel createColntorlsPanel() {
-        JPanel contorlsPanel = new JPanel(null); // null layout to freely position components
-        contorlsPanel.setOpaque(false);
+    private JPanel createControlsPanel() {
+        JPanel controlsPanel = new JPanel(null); // null layout to freely position components
+        controlsPanel.setOpaque(false);
 
         int width;
         int positionX;
@@ -402,7 +411,7 @@ public class GameMenu {
         positionX = calculatePosX(width) ;
         height = 150;
         titleLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(titleLabel);
+        controlsPanel.add(titleLabel);
 
         //creating controls
 
@@ -413,37 +422,37 @@ public class GameMenu {
         positionY += height + 25;
         height = 50;
         upLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(upLabel);
+        controlsPanel.add(upLabel);
 
         //S -- DOWN
         JLabel downLabel = createLabel("S -- DOWN");
         positionY += height + 50;
         downLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(downLabel);
+        controlsPanel.add(downLabel);
 
         //A -- LEFT
         JLabel leftLabel = createLabel("A -- LEFT");
         positionY += height + 50;
         leftLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(leftLabel);
+        controlsPanel.add(leftLabel);
 
         //D -- RIGHT
         JLabel rightLabel = createLabel("D -- RIGHT");
         positionY += height + 50;
         rightLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(rightLabel);
+        controlsPanel.add(rightLabel);
 
         //ESC -- PAUSE
         JLabel pauseLabel = createLabel("ESC -- PAUSE");
         positionY += height + 50;
         pauseLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(pauseLabel);
+        controlsPanel.add(pauseLabel);
 
         //F1 -- EXIT
         JLabel exitLabel = createLabel("F1 -- EXIT");
         positionY += height + 50;
         exitLabel.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(exitLabel);
+        controlsPanel.add(exitLabel);
 
 
 
@@ -454,13 +463,13 @@ public class GameMenu {
         height = 50;
         positionY = 800;
         backButton.setBounds(positionX, positionY, width, height);
-        contorlsPanel.add(backButton);
+        controlsPanel.add(backButton);
 
         //------------------ACTION LISTENERS-----------------------
 
         backButton.addActionListener(e -> changeWindow("MainMenu"));
 
-        return contorlsPanel;
+        return controlsPanel;
     }
 
     private JPanel createCreditsPanel() {
@@ -513,7 +522,7 @@ public class GameMenu {
         creditsPanel.add(sounderLabel);
 
         //creating caption
-        ImageIcon logo = new ImageIcon("res/menu/pjait_logo.png");
+        ImageIcon logo = checkImagePath("/menu/pjait_logo.png");
         Image resizedLogoImage = logo.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
         logo = new ImageIcon(resizedLogoImage);
         JLabel caption = createLabel("Made for PJAIT semester project 2024");
@@ -617,6 +626,14 @@ public class GameMenu {
         return highscoreNameChooserPanel;
     }
 
+    private void saveHighscores() {
+        ArrayList<Highscore> highscoreArrayList = new ArrayList<>();
+        for (int i = 0; i < highscoreList.getModel().getSize(); i++) {
+            highscoreArrayList.add(highscoreList.getModel().getElementAt(i));
+        }
+        Highscore.placeInFile(highscoreArrayList);
+    }
+
 
     // HELPER METHODS
     public void changeWindow(String changeTo) {
@@ -698,12 +715,41 @@ public class GameMenu {
         return (frame.getWidth() - width) / 2;
     }
 
-    private void saveHighscores() {
-        ArrayList<Highscore> highscoreArrayList = new ArrayList<>();
-        for (int i = 0; i < highscoreList.getModel().getSize(); i++) {
-            highscoreArrayList.add(highscoreList.getModel().getElementAt(i));
+    private void findHighscoresFilePath() {
+        String highscoresFilePath;
+
+        try {
+            File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            File jarDir = jarFile.getParentFile();
+            highscoresFilePath = jarDir.getAbsolutePath();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
-        Highscore.placeInFile(highscoreArrayList);
+
+        Highscore.setHighscoresFilePath(highscoresFilePath + "\\highscores.txt");
+    }
+
+    private ImageIcon checkImagePath(String path) {
+        URL imgURL = getClass().getResource(path);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL);
+        } else {
+            System.err.println("Couldn't find file: " + path);
+            return null;
+        }
+    }
+
+    private BufferedImage toBufferedImage(ImageIcon imageIcon) {
+        Image image = imageIcon.getImage();
+        BufferedImage returnBufferedImage = new BufferedImage(
+                image.getWidth(null),
+                image.getHeight(null),
+                BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2d = returnBufferedImage.createGraphics();
+        g2d.drawImage(image, 0, 0, null);
+        g2d.dispose();
+        return returnBufferedImage;
     }
 
 

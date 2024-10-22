@@ -124,7 +124,6 @@ public abstract class Booster extends Entity {
     @Override
     protected ImageIcon getScaledIcon(BufferedImage image) {
         Image scaledImage = image.getScaledInstance(gp.getWidthTileSize(), gp.getHeightTileSize(), Image.SCALE_SMOOTH);
-
         return new ImageIcon(scaledImage);
     }
 
