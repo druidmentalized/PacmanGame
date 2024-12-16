@@ -30,7 +30,7 @@ A classic Pacman game built in Java/Swing, featuring exciting gameplay, custom l
 - `res`- Game assests like sprites and map parts
 - `README.md` - Project documentation
 
-##Licence
+## Licence
 This project is licensed under the MIT License
 
 ## Acknowledgments
