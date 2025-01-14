@@ -29,6 +29,7 @@ A classic Pacman game built in Java/Swing, featuring exciting gameplay, custom l
 - `src/Tile/` - Tile processing
 - `res`- Game assests like sprites and map parts
 - `README.md` - Project documentation
+- `LICENSE` - Project license
 
 ## Licence
 This project is licensed under the MIT License
